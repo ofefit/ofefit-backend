@@ -16,7 +16,6 @@ jobs:
         run: |
           curl -sS --fail -X POST "$SUPABASE_URL/rest/v1/rpc/keep_alive" \
             -H "apikey: $SUPABASE_ANON_KEY" \
-            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
             -H "Content-Type: application/json" \
             -d '{}'
           echo "Ping sent"
