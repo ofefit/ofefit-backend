@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ofefit</title>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+:root{--ink:#1d2430;--mut:#66707f;--line:#e4e7ec;--bg:#fbfaf7;
+  --teal:#0f7b5f;--sun:#f4b400;--coral:#ff6b4a;--sky:#2a9df4;--plum:#7b4fd6;--leaf:#34a853;--ok:#067647;--warn:#b42318}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
+header{background:linear-gradient(90deg,var(--teal),var(--plum));color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.logo-pill{background:#fff;border-radius:14px;padding:6px 12px;display:inline-flex}
+.logo-pill img{height:52px;width:auto;display:block}
+nav button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);padding:6px 14px;border-radius:999px;cursor:pointer;margin-left:6px;font-size:14px}
+nav button.on{background:#fff;color:var(--plum);font-weight:600}
+main{max-width:980px;margin:0 auto;padding:20px}
+.view[hidden]{display:none}
+h2{font-size:22px;margin:8px 0 12px}
+h3{font-size:17px;margin:0 0 6px}
+.banner-wrap{max-width:980px;margin:16px auto 0;padding:0 20px}
+.banner-box{position:relative}
+.banner{display:block;width:100%;height:auto;border-radius:18px;box-shadow:0 4px 18px rgba(16,24,40,.15)}
+.banner-btn{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font-size:17px;padding:12px 28px;box-shadow:0 4px 12px rgba(0,0,0,.25);white-space:nowrap}
+.caption{text-align:center;margin:12px 0 0;color:var(--mut);font-size:15px;font-weight:600}
+.btn{background:var(--sun);color:#1d2430;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:15px}
+.btn.sec{background:#fff;color:var(--plum);border:2px solid var(--plum)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.thumb{display:block;width:100%;height:auto;border-radius:12px;margin-bottom:10px}
+.tier{border-top:6px solid var(--c,var(--teal))}
+.tier .price{color:var(--c,var(--teal))}
+.t-student{--c:var(--sky)}.t-weekend{--c:var(--sun)}.t-flex{--c:var(--teal)}.t-core{--c:var(--plum)}
+.t-founders{--c:var(--coral)}.t-family{--c:var(--leaf)}.t-annual{--c:#0b5e48}
+.price{font-size:24px;font-weight:800}
+.price small{font-size:13px;color:var(--mut);font-weight:400}
+.strip{height:10px;background:linear-gradient(90deg,var(--coral),var(--sun),var(--leaf),var(--sky),var(--plum));border-radius:999px;margin:16px 0}
+input,select{width:100%;padding:10px;border:1px solid #cfd5dd;border-radius:8px;font-size:15px;margin:4px 0 10px;background:#fff}
+label{font-size:14px;color:var(--mut)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.row{grid-template-columns:1fr}}
+.msg{margin:10px 0;padding:10px 12px;border-radius:8px;font-size:14px;display:none}
+.msg.show{display:block}
+.msg.err{background:#fef3f2;color:var(--warn)}
+.msg.ok{background:#ecfdf3;color:var(--ok)}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.pill.active{background:#dcf5e6;color:var(--ok)}
+.pill.pending{background:#fff3c4;color:#b54708}
+.pill.expired{background:#fef3f2;color:var(--warn)}
+#qr{display:flex;justify-content:center;margin:12px 0}
+.box{background:#fff8e1;border:2px dashed var(--sun);border-radius:12px;padding:14px;margin:12px 0}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:1px}
+.block{margin:18px 0}
+.muted{color:var(--mut);font-size:13px}
+.footer{text-align:center;color:var(--mut);font-size:13px;padding:24px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-pill"><img src="img/ofefit-logo.png" alt="ofefit"></div>
+  <nav>
+    <button data-v="home" class="on">Home</button>
+    <button data-v="join">Join</button>
+    <button data-v="member">My card</button>
+  </nav>
+</header>
+
+<div class="banner-wrap">
+  <div class="banner-box">
+    <img class="banner" src="img/banner.jpg" alt="Community fitness class in Cape Coast">
+    <button class="btn banner-btn" data-go="join">Join ofefit</button>
+  </div>
+  <p class="caption">Community fitness in Cape Coast. Let's do it together.</p>
+</div>
+
+<main>
+<!-- HOME -->
+<section id="view-home" class="view">
+  <div class="strip"></div>
+
+  <div class="block">
+    <h2>Schedule</h2>
+    <div class="grid">
+      <div class="card"><img class="thumb" src="img/01_lets_burn.png" alt="Chale, Let's Burn"><h3>Chale, Let's Burn</h3><p class="muted">Tuesday · 6:30–8:00pm</p><p>Evening aerobics.</p></div>
+      <div class="card"><img class="thumb" src="img/02_hustle_thursday.png" alt="Hustle Thursday"><h3>Hustle Thursday</h3><p class="muted">Thursday · 6:30–8:00pm</p><p>Evening aerobics.</p></div>
+      <div class="card"><img class="thumb" src="img/03_morning_aerobics.png" alt="Nkɔso Saturdays"><h3>Nkɔso Saturdays</h3><p class="muted">Two Saturdays a month · 7:00–8:30am</p><p>Morning aerobics. The fourth Saturday is a rest day.</p></div>
+      <div class="card"><img class="thumb" src="img/04_health_walk.png" alt="Akwaaba Health Walk"><h3>Akwaaba Health Walk</h3><p class="muted">First Saturday · 6:30am</p><p>Walk, then yoga and stretching to finish.</p></div>
+      <div class="card"><img class="thumb" src="img/05_bi_monthly_fitness_event.png" alt="Big Night"><h3>Big Night</h3><p class="muted">Every second month · Friday evening</p><p>DJ-led night for up to 300 people.</p></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <h2>Memberships</h2>
+    <div class="grid" id="tier-cards"></div>
+  </div>
+  <p class="footer">ofefit · Cape Coast</p>
+</section>
+
+<!-- JOIN -->
+<section id="view-join" class="view" hidden>
+  <h2>Join ofefit</h2>
+  <p class="muted">Fill in the form, then pay by MoMo. Your membership activates once your payment is confirmed.</p>
+  <form id="join-form" class="card">
+    <div class="row">
+      <div><label>Full name</label><input name="name" required></div>
+      <div><label>MoMo / phone number</label><input name="phone" required inputmode="tel"></div>
+    </div>
+    <label>Membership</label>
+    <select name="tier" id="tier-select"></select>
+    <div id="student-field" hidden>
+      <label>UCC student ID</label>
+      <input name="studentId">
+    </div>
+    <div id="family-field" hidden>
+      <label>Children under 16 (up to 2)</label>
+      <input name="children" type="number" min="0" max="2" value="0">
+    </div>
+    <button class="btn" type="submit">Continue to payment</button>
+    <div class="msg" id="join-msg"></div>
+  </form>
+
+  <div id="payment" class="card" hidden style="margin-top:14px;border-top:6px solid var(--sun)">
+    <h3>Pay by MoMo</h3>
+    <div class="box">
+      <div>Send <strong id="pay-amount"></strong> to</div>
+      <div class="mono" id="pay-number"></div>
+      <div>Name: <span id="pay-name"></span></div>
+      <div>Reference (required): <span class="mono" id="pay-ref"></span></div>
+    </div>
+    <p class="muted">Write down your member code. After you pay, enter the MoMo transaction ID below.</p>
+    <form id="txn-form">
+      <label>MoMo transaction ID</label>
+      <input name="txn" required>
+      <button class="btn" type="submit">I have paid</button>
+      <div class="msg" id="txn-msg"></div>
+    </form>
+  </div>
+</section>
+
+<!-- MY CARD -->
+<section id="view-member" class="view" hidden>
+  <h2>My membership card</h2>
+  <div class="card" style="max-width:480px;border-top:6px solid var(--plum)">
+    <label>Your member code (from sign-up)</label>
+    <div style="display:flex;gap:8px">
+      <input id="lookup-code" placeholder="FIE-XXXXXX" style="text-transform:uppercase">
+      <button class="btn" id="lookup-btn">Show card</button>
+    </div>
+    <div class="msg" id="card-msg"></div>
+    <div id="card" hidden>
+      <h3 id="card-name"></h3>
+      <div class="muted" id="card-tier"></div>
+      <div style="margin:8px 0"><span class="pill" id="card-status"></span> <span class="muted" id="card-expiry"></span></div>
+      <div id="qr"></div>
+      <p class="muted" style="text-align:center">Show this code at the gate. Staff scan it to check you in.</p>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+const CFG = window.OFEFIT_CONFIG;
+const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_PUBLISHABLE_KEY);
+const $ = id => document.getElementById(id);
+const TIERS = [
+  {id:"student", name:"ofefit Student", price:60, days:30, icon:"🎓", cls:"t-student", thumb:"06_student_membership.png", desc:"Tue & Thu, both Saturday aerobics, walk. UCC student ID required."},
+  {id:"weekend", name:"ofefit Weekend", price:45, days:30, icon:"🌤️", cls:"t-weekend", thumb:"07_weekend_membership.png", desc:"Both Saturday aerobics, walk and yoga."},
+  {id:"flex", name:"ofefit Flex", price:90, days:30, icon:"🔥", cls:"t-flex", thumb:"08_flex_membership.png", desc:"Tue & Thu classes, walk."},
+  {id:"core", name:"ofefit Core", price:120, days:30, icon:"⭐", cls:"t-core", thumb:"09_core_member.png", desc:"Tue & Thu, both Saturday aerobics, walk, yoga, 2 guest passes a month."},
+  {id:"founders", name:"Founders Core", price:100, days:30, icon:"🏆", cls:"t-founders", thumb:"10_core_founding_members.png", desc:"Core benefits, price locked for 6 months. First 25 sign-ups only."},
+  {id:"family", name:"ofefit Family", price:200, days:30, icon:"👨‍👩‍👧", cls:"t-family", thumb:"11_family_membership.png", desc:"2 adults and up to 2 children under 16. All sessions."},
+  {id:"annual", name:"Core Annual", price:1200, days:365, icon:"🎁", cls:"t-annual", thumb:"12_yearly_membership.png", desc:"Core for 12 months, with 2 months free."}
+];
+const tierById = id => TIERS.find(t => t.id === id);
+const fmt = n => "GHS " + Number(n || 0).toLocaleString();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function msg(id, text, ok){ const el=$(id); el.textContent=text; el.className="msg show "+(ok?"ok":"err"); }
+function clearMsg(id){ const el=$(id); el.className="msg"; el.textContent=""; }
+// Turns database errors into plain language
+function friendly(err){ return (err && err.message) ? err.message.replace(/^.*?: /, "") : "Something went wrong. Please try again."; }
+
+// ---- Navigation ----
+function showView(name){
+  document.querySelectorAll(".view").forEach(v => v.hidden = (v.id !== "view-"+name));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.v === name));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("nav button").forEach(b => b.addEventListener("click", () => showView(b.dataset.v)));
+document.querySelectorAll("[data-go]").forEach(b => b.addEventListener("click", () => showView(b.dataset.go)));
+
+// ---- Tier cards ----
+$("tier-cards").innerHTML = TIERS.map(t => `
+  <div class="card tier ${t.cls}">
+    <img class="thumb" src="img/${t.thumb}" alt="${esc(t.name)}">
+    <h3>${esc(t.name)}</h3>
+    <div class="price">${fmt(t.price)} <small>${t.days===365?"/year":"/month"}</small></div>
+    <p class="muted">${esc(t.desc)}</p>
+    <button class="btn sec small" data-tier="${t.id}">Choose</button>
+  </div>`).join("");
+document.querySelectorAll("[data-tier]").forEach(b => b.addEventListener("click", () => {
+  $("tier-select").value = b.dataset.tier; toggleTierFields(); showView("join");
+}));
+
+// ---- Join ----
+$("tier-select").innerHTML = TIERS.map(t => `<option value="${t.id}">${esc(t.name)} · ${fmt(t.price)}${t.days===365?" / year":" / month"}</option>`).join("");
+function toggleTierFields(){
+  const t = $("tier-select").value;
+  $("student-field").hidden = t !== "student";
+  $("family-field").hidden = t !== "family";
+}
+$("tier-select").addEventListener("change", toggleTierFields);
+toggleTierFields();
+
+let pending = null;
+$("join-form").addEventListener("submit", async e => {
+  e.preventDefault(); clearMsg("join-msg");
+  const f = e.target;
+  const tier = tierById(f.tier.value);
+  const btn = f.querySelector("button"); btn.disabled = true;
+  try{
+    const { data, error } = await sb.rpc("join_membership", {
+      p_name: f.name.value.trim(),
+      p_phone: f.phone.value.trim(),
+      p_tier: tier.id,
+      p_student_id: tier.id === "student" ? f.studentId.value.trim() : null,
+      p_children: tier.id === "family" ? Number(f.children.value || 0) : 0
+    });
+    if(error) throw error;
+    const row = Array.isArray(data) ? data[0] : data;
+    pending = { code: row.member_code, tier, name: f.name.value.trim() };
+    try { localStorage.setItem("ofefit_code", pending.code); } catch(_) {}
+    showPayment();
+  }catch(err){ msg("join-msg", friendly(err), false); }
+  finally{ btn.disabled = false; }
+});
+
+function showPayment(){
+  $("payment").hidden = false;
+  $("pay-amount").textContent = fmt(pending.tier.price);
+  $("pay-number").textContent = CFG.MOMO_NUMBER;
+  $("pay-name").textContent = CFG.MOMO_NAME;
+  $("pay-ref").textContent = pending.code;
+  $("payment").scrollIntoView({behavior:"smooth"});
+}
+$("txn-form").addEventListener("submit", async e => {
+  e.preventDefault(); clearMsg("txn-msg");
+  if(!pending){ msg("txn-msg","Start by filling in the join form.",false); return; }
+  try{
+    const { error } = await sb.rpc("submit_payment", { p_code: pending.code, p_txn: e.target.txn.value.trim() });
+    if(error) throw error;
+    msg("txn-msg","Thank you. We'll confirm your payment shortly. Check My card once it's active.",true);
+    e.target.reset();
+  }catch(err){ msg("txn-msg", friendly(err), false); }
+});
+
+// ---- My card ----
+function drawQR(code){
+  const el = $("qr"); el.innerHTML = "";
+  if(typeof QRCode === "undefined"){ el.innerHTML = `<div class="mono">FIE:${esc(code)}</div>`; return; }
+  new QRCode(el, { text: "FIE:"+code, width: 200, height: 200 });
+}
+async function showCard(){
+  clearMsg("card-msg");
+  const code = $("lookup-code").value.trim().toUpperCase();
+  if(!code){ msg("card-msg","Enter your member code.",false); return; }
+  try{
+    const { data, error } = await sb.rpc("get_member_card", { p_code: code });
+    if(error) throw error;
+    const m = Array.isArray(data) ? data[0] : data;
+    if(!m){ msg("card-msg","No member found for that code.",false); $("card").hidden = true; return; }
+    const active = m.status === "active" && m.expires_at && new Date(m.expires_at) > new Date();
+    const status = active ? "active" : (m.status === "active" ? "expired" : "pending");
+    $("card-name").textContent = m.full_name;
+    $("card-tier").textContent = (tierById(m.tier)?.name || m.tier) + " · " + code;
+    $("card-status").textContent = status;
+    $("card-status").className = "pill " + status;
+    $("card-expiry").textContent = m.expires_at ? "Valid until " + new Date(m.expires_at).toLocaleDateString() : "Awaiting payment confirmation";
+    $("card").hidden = false;
+    if(active) drawQR(code); else $("qr").innerHTML = '<p class="muted">Your QR code appears once your payment is confirmed.</p>';
+  }catch(err){ msg("card-msg", friendly(err), false); }
+}
+$("lookup-btn").addEventListener("click", showCard);
+try{ const saved = localStorage.getItem("ofefit_code"); if(saved) $("lookup-code").value = saved; }catch(_){}
+</script>
+</body>
+</html>

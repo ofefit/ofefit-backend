@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ofefit admin</title>
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+:root{--ink:#1d2430;--mut:#66707f;--line:#e4e7ec;--bg:#fbfaf7;
+  --teal:#0f7b5f;--sun:#f4b400;--coral:#ff6b4a;--sky:#2a9df4;--plum:#7b4fd6;--leaf:#34a853;--ok:#067647;--warn:#b42318}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.5}
+header{background:linear-gradient(90deg,var(--teal),var(--plum));color:#fff;padding:14px 20px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.logo-pill{background:#fff;border-radius:14px;padding:6px 12px;display:inline-flex}
+.logo-pill img{height:44px;width:auto;display:block}
+header button{background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6);padding:6px 14px;border-radius:999px;cursor:pointer;font-size:14px}
+main{max-width:1000px;margin:0 auto;padding:20px}
+h2{font-size:22px;margin:8px 0 12px}
+h3{font-size:17px;margin:0 0 6px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(16,24,40,.05);margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:12px 0}
+.stat{font-size:28px;font-weight:800;color:var(--plum)}
+.muted{color:var(--mut);font-size:13px}
+.btn{background:var(--sun);color:#1d2430;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:15px}
+.btn.sec{background:#fff;color:var(--plum);border:2px solid var(--plum)}
+.btn.small{padding:6px 10px;font-size:13px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+input,select{width:100%;padding:10px;border:1px solid #cfd5dd;border-radius:8px;font-size:15px;margin:4px 0 10px;background:#fff}
+label{font-size:14px;color:var(--mut)}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:640px){.row3{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:10px;overflow:hidden;font-size:14px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:#f3eefc}
+.msg{margin:10px 0;padding:10px 12px;border-radius:8px;font-size:14px;display:none}
+.msg.show{display:block}
+.msg.err{background:#fef3f2;color:var(--warn)}
+.msg.ok{background:#ecfdf3;color:var(--ok)}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.pill.active{background:#dcf5e6;color:var(--ok)}
+.pill.pending{background:#fff3c4;color:#b54708}
+.pill.expired{background:#fef3f2;color:var(--warn)}
+.mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px}
+.view[hidden]{display:none}
+.block{margin:18px 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo-pill"><img src="img/ofefit-logo.png" alt="ofefit"></div>
+  <button id="signout-btn" hidden>Sign out</button>
+</header>
+
+<main>
+<!-- LOGIN -->
+<section id="view-login" class="view">
+  <h2>Staff sign in</h2>
+  <form id="login-form" class="card" style="max-width:420px">
+    <label>Email</label>
+    <input name="email" type="email" required autocomplete="username">
+    <label>Password</label>
+    <input name="password" type="password" required autocomplete="current-password">
+    <button class="btn" type="submit">Sign in</button>
+    <div class="msg" id="login-msg"></div>
+  </form>
+</section>
+
+<!-- ADMIN -->
+<section id="view-admin" class="view" hidden>
+  <div class="msg" id="admin-msg"></div>
+
+  <div class="grid">
+    <div class="card" style="border-top:6px solid var(--teal)"><div class="muted">Active members</div><div class="stat" id="stat-active">–</div></div>
+    <div class="card" style="border-top:6px solid var(--sun)"><div class="muted">Payments to confirm</div><div class="stat" id="stat-pending">–</div></div>
+    <div class="card" style="border-top:6px solid var(--coral)" data-admin-only><div class="muted">Revenue this month</div><div class="stat" id="stat-revenue">–</div></div>
+    <div class="card" style="border-top:6px solid var(--sky)"><div class="muted">Founders Core spots left</div><div class="stat" id="stat-founders">–</div></div>
+  </div>
+
+  <div class="block card">
+    <h3>Check in at the gate</h3>
+    <label>Session</label>
+    <select id="session-select"></select>
+    <label>Scan a QR code (upload a photo or screenshot)</label>
+    <input type="file" id="scan-file" accept="image/*">
+    <label>Or type the member code</label>
+    <div style="display:flex;gap:8px">
+      <input id="manual-code" placeholder="FIE-XXXXXX" style="text-transform:uppercase">
+      <button class="btn sec" id="manual-btn">Check in</button>
+    </div>
+    <div class="msg" id="checkin-msg"></div>
+  </div>
+
+  <div class="block card">
+    <h3>Attendance</h3>
+    <div class="row3">
+      <div><label>Session</label><select id="log-session"></select></div>
+      <div><label>Date</label><input type="date" id="log-date"></div>
+      <div><label>Period</label><select id="log-period"><option value="day">Day</option><option value="week">Week</option><option value="month">Month</option><option value="year">Year</option></select></div>
+    </div>
+    <div class="muted" id="log-range"></div>
+    <div class="grid">
+      <div class="card" style="border-top:6px solid var(--leaf);margin:0"><div class="muted">Checked in (this session)</div><div class="stat" id="att-count">–</div></div>
+      <div class="card" style="border-top:6px solid var(--sky);margin:0"><div class="muted">All sessions (unique members)</div><div id="att-summary" style="font-size:14px">–</div></div>
+    </div>
+    <table><thead><tr><th>When</th><th>Member</th><th>Code</th><th>Session</th></tr></thead><tbody id="log-rows"></tbody></table>
+  </div>
+
+  <div class="block card" data-admin-only>
+    <h3>Revenue</h3>
+    <div class="row3">
+      <div><label>Date</label><input type="date" id="fin-date"></div>
+      <div><label>Period</label><select id="fin-period"><option value="day">Day</option><option value="week">Week</option><option value="month" selected>Month</option><option value="year">Year</option></select></div>
+      <div><label>&nbsp;</label><div class="muted" id="fin-range" style="padding-top:12px"></div></div>
+    </div>
+    <div class="grid">
+      <div class="card" style="border-top:6px solid var(--coral);margin:0"><div class="muted">Confirmed membership revenue</div><div class="stat" id="fin-total">–</div></div>
+      <div class="card" style="border-top:6px solid var(--plum);margin:0"><div class="muted">Payments confirmed</div><div class="stat" id="fin-count">–</div></div>
+    </div>
+    <table><thead><tr><th>Membership</th><th>Payments</th><th>Revenue</th></tr></thead><tbody id="fin-rows"></tbody></table>
+    <p class="muted">Membership payments only. Big Night tickets, sponsors and expenses are not recorded here yet.</p>
+  </div>
+
+  <div class="block card" data-admin-only>
+    <h3>Payments to confirm</h3>
+    <table><thead><tr><th>Member</th><th>Tier</th><th>Amount</th><th>MoMo ID</th><th></th></tr></thead><tbody id="pay-rows"></tbody></table>
+  </div>
+
+  <div class="block card">
+    <h3>Members</h3>
+    <input id="member-search" placeholder="Search by name, code or phone" style="max-width:360px">
+    <table><thead><tr><th>Name</th><th>Code</th><th>Tier</th><th>Status</th><th>Expires</th><th>Phone</th></tr></thead><tbody id="member-rows"></tbody></table>
+    <p class="muted"><button class="btn sec small" id="refresh-btn">Refresh</button></p>
+  </div>
+</section>
+</main>
+
+<script>
+const CFG = window.OFEFIT_CONFIG;
+const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_PUBLISHABLE_KEY);
+const $ = id => document.getElementById(id);
+const TIER_NAMES = {student:"ofefit Student", weekend:"ofefit Weekend", flex:"ofefit Flex", core:"ofefit Core", founders:"Founders Core", family:"ofefit Family", annual:"Core Annual"};
+const SESSIONS = [
+  {key:"tue",  name:"Chale, Let's Burn"},
+  {key:"thu",  name:"Hustle Thursday"},
+  {key:"sat",  name:"Nkɔso Saturdays"},
+  {key:"walk", name:"Akwaaba Health Walk"},
+  {key:"big",  name:"Big Night"}
+];
+const FOUNDERS_LIMIT = 25;
+const sessionName = k => (SESSIONS.find(s => s.key === k) || {}).name || k;
+const fmt = n => "GHS " + Number(n || 0).toLocaleString();
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const todayStr = () => new Date().toISOString().slice(0,10);
+const addDays = (d, n) => new Date(d.getTime() + n*86400000);
+function msg(id, text, ok){ const el=$(id); el.textContent=text; el.className="msg show "+(ok?"ok":"err"); }
+function clearMsg(id){ const el=$(id); el.className="msg"; el.textContent=""; }
+function friendly(err){ return (err && err.message) ? err.message.replace(/^.*?: /, "") : "Something went wrong. Please try again."; }
+
+// Period helper: weeks run Monday to Sunday
+function rangeFor(period, dateStr){
+  const base = new Date((dateStr || todayStr()) + "T00:00:00");
+  let start, end;
+  if(period === "day"){ start = base; end = addDays(base, 1); }
+  else if(period === "week"){ const dow = (base.getDay()+6)%7; start = addDays(base, -dow); end = addDays(start, 7); }
+  else if(period === "month"){ start = new Date(base.getFullYear(), base.getMonth(), 1); end = new Date(base.getFullYear(), base.getMonth()+1, 1); }
+  else { start = new Date(base.getFullYear(), 0, 1); end = new Date(base.getFullYear()+1, 0, 1); }
+  return { start, end, label: start.toLocaleDateString() + " to " + addDays(end, -1).toLocaleDateString() };
+}
+
+// ---- Sign in / out ----
+let isAdmin = false;
+function showView(name){
+  document.querySelectorAll(".view").forEach(v => v.hidden = (v.id !== "view-"+name));
+}
+function applyRole(){
+  document.querySelectorAll("[data-admin-only]").forEach(el => el.hidden = !isAdmin);
+}
+async function enterAdmin(){
+  showView("admin");
+  $("signout-btn").hidden = false;
+  const { data } = await sb.rpc("is_admin");
+  isAdmin = data === true;
+  applyRole();
+  $("session-select").innerHTML = SESSIONS.map(s => `<option value="${s.key}">${esc(s.name)}</option>`).join("");
+  $("log-session").innerHTML = $("session-select").innerHTML;
+  $("log-date").value = todayStr();
+  $("fin-date").value = todayStr();
+  refreshAll();
+}
+$("login-form").addEventListener("submit", async e => {
+  e.preventDefault(); clearMsg("login-msg");
+  const { error } = await sb.auth.signInWithPassword({ email: e.target.email.value.trim(), password: e.target.password.value });
+  if(error){ msg("login-msg", "Email or password is not right.", false); return; }
+  enterAdmin();
+});
+$("signout-btn").addEventListener("click", async () => {
+  await sb.auth.signOut();
+  $("signout-btn").hidden = true; isAdmin = false; showView("login");
+});
+sb.auth.getSession().then(({ data }) => { if(data.session) enterAdmin(); else showView("login"); });
+
+// ---- Data loading ----
+async function loadMembers(){
+  const { data, error } = await sb.from("members").select("*").order("joined_at", { ascending: false });
+  if(error) throw error;
+  return data || [];
+}
+async function refreshAll(){
+  clearMsg("admin-msg");
+  try{
+    const members = await loadMembers();
+    const now = new Date();
+    const activeN = members.filter(m => m.status === "active" && m.expires_at && new Date(m.expires_at) > now).length;
+    $("stat-active").textContent = activeN;
+    $("stat-founders").textContent = Math.max(0, FOUNDERS_LIMIT - members.filter(m => m.tier === "founders").length);
+
+    $("member-rows").innerHTML = members.map(m => {
+      const active = m.status === "active" && m.expires_at && new Date(m.expires_at) > now;
+      const st = active ? "active" : (m.status === "active" ? "expired" : "pending");
+      return `<tr><td>${esc(m.full_name)}</td><td class="mono">${esc(m.code)}</td><td>${esc(TIER_NAMES[m.tier]||m.tier)}</td>
+        <td><span class="pill ${st}">${st}</span></td><td>${m.expires_at ? new Date(m.expires_at).toLocaleDateString() : "–"}</td><td>${esc(m.phone)}</td></tr>`;
+    }).join("") || `<tr><td colspan="6" class="muted">No members yet.</td></tr>`;
+    applyMemberSearch();
+    window._members = members;
+
+    if(isAdmin){
+      await loadPayments();
+      await renderRevenue();
+      const mr = rangeFor("month", todayStr());
+      const { data } = await sb.rpc("revenue_summary", { p_from: mr.start.toISOString(), p_to: mr.end.toISOString() });
+      const total = (data || []).reduce((s, r) => s + Number(r.revenue || 0), 0);
+      $("stat-revenue").textContent = fmt(total);
+    }
+    await renderAttendance();
+  }catch(err){ msg("admin-msg", friendly(err), false); }
+}
+$("refresh-btn").addEventListener("click", refreshAll);
+
+async function loadPayments(){
+  const { data, error } = await sb.from("payments").select("*").eq("status", "pending").order("created_at", { ascending: true });
+  if(error) throw error;
+  const rows = data || [];
+  $("stat-pending").textContent = rows.length;
+  const members = window._members || [];
+  $("pay-rows").innerHTML = rows.length ? rows.map(p => {
+    const m = members.find(x => x.code === p.member_code) || {};
+    return `<tr><td>${esc(m.full_name||"–")}<div class="muted mono">${esc(p.member_code)}</div></td>
+      <td>${esc(TIER_NAMES[p.tier]||p.tier)}</td><td>${fmt(p.amount_ghs)}</td>
+      <td class="mono">${esc(p.momo_txn_id)}</td>
+      <td><button class="btn small" data-confirm="${esc(p.id)}">Confirm</button></td></tr>`;
+  }).join("") : `<tr><td colspan="5" class="muted">No payments waiting.</td></tr>`;
+  document.querySelectorAll("[data-confirm]").forEach(b => b.addEventListener("click", () => confirmPayment(b.dataset.confirm, b)));
+}
+async function confirmPayment(id, btn){
+  btn.disabled = true;
+  try{
+    const { error } = await sb.rpc("confirm_payment", { p_payment: id });
+    if(error) throw error;
+    msg("admin-msg", "Payment confirmed. The membership is now active.", true);
+    refreshAll();
+  }catch(err){ msg("admin-msg", friendly(err), false); btn.disabled = false; }
+}
+
+// ---- Check-in ----
+async function checkIn(raw){
+  clearMsg("checkin-msg");
+  let code = String(raw||"").trim().toUpperCase();
+  if(code.startsWith("FIE:")) code = code.slice(4);
+  if(!code){ msg("checkin-msg","No code found.",false); return; }
+  const key = $("session-select").value;
+  try{
+    const { data, error } = await sb.rpc("check_in", { p_code: code, p_session: key });
+    if(error) throw error;
+    const name = ((window._members||[]).find(m => m.code === code) || {}).full_name || code;
+    const text = {
+      ok: "✓ " + name + " checked in for " + sessionName(key) + ".",
+      duplicate: name + " is already checked in for " + sessionName(key) + " today.",
+      inactive: name + " does not have an active membership. Check payment or renewal.",
+      unknown: "Unknown member code: " + code
+    }[data] || "Check-in finished.";
+    msg("checkin-msg", text, data === "ok");
+    renderAttendance();
+  }catch(err){ msg("checkin-msg", friendly(err), false); }
+}
+$("manual-btn").addEventListener("click", () => checkIn($("manual-code").value));
+
+function decodeQR(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const d = ctx.getImageData(0, 0, c.width, c.height);
+      const q = (typeof jsQR === "function") ? jsQR(d.data, c.width, c.height) : null;
+      q ? resolve(q.data) : reject(new Error("No QR code found in that image. Try a clearer photo."));
+    };
+    img.onerror = () => reject(new Error("Could not read that image."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+$("scan-file").addEventListener("change", async e => {
+  const file = e.target.files[0]; if(!file) return;
+  try{ await checkIn(await decodeQR(file)); }
+  catch(err){ msg("checkin-msg", err.message, false); }
+  e.target.value = "";
+});
+
+// ---- Attendance ----
+async function renderAttendance(){
+  const r = rangeFor($("log-period").value, $("log-date").value);
+  const key = $("log-session").value;
+  $("log-range").textContent = "Showing " + r.label;
+  try{
+    const { data, error } = await sb.from("checkins").select("*")
+      .gte("checked_in_at", r.start.toISOString()).lt("checked_in_at", r.end.toISOString())
+      .order("checked_in_at", { ascending: false });
+    if(error) throw error;
+    const day = data || [];
+    const members = window._members || [];
+    const sel = day.filter(c => c.session_key === key);
+    $("att-count").textContent = sel.length;
+    $("att-summary").innerHTML = SESSIONS.map(s => `${esc(s.name)}: <strong>${day.filter(c => c.session_key === s.key).length}</strong>`).join("<br>")
+      + `<br>Unique members: <strong>${new Set(day.map(c => c.member_code)).size}</strong>`;
+    $("log-rows").innerHTML = sel.map(c => {
+      const m = members.find(x => x.code === c.member_code) || {};
+      return `<tr><td>${new Date(c.checked_in_at).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td>
+        <td>${esc(m.full_name||"")}</td><td class="mono">${esc(c.member_code)}</td><td>${esc(sessionName(c.session_key))}</td></tr>`;
+    }).join("") || `<tr><td colspan="4" class="muted">No check-ins for this session in this period.</td></tr>`;
+  }catch(err){ msg("admin-msg", friendly(err), false); }
+}
+["log-session","log-date","log-period"].forEach(id => $(id).addEventListener("change", renderAttendance));
+
+// ---- Revenue ----
+async function renderRevenue(){
+  const r = rangeFor($("fin-period").value, $("fin-date").value);
+  $("fin-range").textContent = r.label;
+  const { data, error } = await sb.rpc("revenue_summary", { p_from: r.start.toISOString(), p_to: r.end.toISOString() });
+  if(error) throw error;
+  const rows = data || [];
+  $("fin-total").textContent = fmt(rows.reduce((s, x) => s + Number(x.revenue||0), 0));
+  $("fin-count").textContent = rows.reduce((s, x) => s + Number(x.payments||0), 0);
+  $("fin-rows").innerHTML = rows.map(x => `<tr><td>${esc(TIER_NAMES[x.tier]||x.tier)}</td><td>${x.payments}</td><td>${fmt(x.revenue)}</td></tr>`).join("")
+    || `<tr><td colspan="3" class="muted">No confirmed payments in this period.</td></tr>`;
+}
+["fin-period","fin-date"].forEach(id => $(id).addEventListener("change", () => isAdmin && renderRevenue().catch(err => msg("admin-msg", friendly(err), false))));
+
+// ---- Member search ----
+function applyMemberSearch(){
+  const q = $("member-search").value.trim().toLowerCase();
+  document.querySelectorAll("#member-rows tr").forEach(tr => { tr.hidden = !!q && !tr.textContent.toLowerCase().includes(q); });
+}
+$("member-search").addEventListener("input", applyMemberSearch);
+</script>
+</body>
+</html>
