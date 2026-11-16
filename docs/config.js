@@ -4,6 +4,6 @@
 window.OFEFIT_CONFIG = {
   SUPABASE_URL: "https://yjljundvlhcpuckrotxj.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_KUBGpamIfMxm-ESsMtm_Yw_5-s_4J1j",
-  MOMO_NUMBER: "0XX XXX XXXX",
+  MOMO_NUMBER: "059 510 8915",
   MOMO_NAME: "ofefit"
 };
