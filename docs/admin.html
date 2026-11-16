@@ -6,7 +6,7 @@
 <title>ofefit admin</title>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
 <style>
 :root{--ink:#1d2430;--mut:#66707f;--line:#e4e7ec;--bg:#fbfaf7;
   --teal:#0f7b5f;--sun:#f4b400;--coral:#ff6b4a;--sky:#2a9df4;--plum:#7b4fd6;--leaf:#34a853;--ok:#067647;--warn:#b42318}
@@ -173,4 +173,212 @@ function rangeFor(period, dateStr){
   else if(period === "week"){ const dow = (base.getDay()+6)%7; start = addDays(base, -dow); end = addDays(start, 7); }
   else if(period === "month"){ start = new Date(base.getFullYear(), base.getMonth(), 1); end = new Date(base.getFullYear(), base.getMonth()+1, 1); }
   else { start = new Date(base.getFullYear(), 0, 1); end = new Date(base.getFullYear()+1, 0, 1); }
-  return { start, end, label:
+  return { start, end, label: start.toLocaleDateString() + " to " + addDays(end, -1).toLocaleDateString() };
+}
+
+// ---- Sign in / out ----
+let isAdmin = false;
+function showView(name){
+  document.querySelectorAll(".view").forEach(v => v.hidden = (v.id !== "view-"+name));
+}
+function applyRole(){
+  document.querySelectorAll("[data-admin-only]").forEach(el => el.hidden = !isAdmin);
+}
+async function enterAdmin(){
+  showView("admin");
+  $("signout-btn").hidden = false;
+  const { data } = await sb.rpc("is_admin");
+  isAdmin = data === true;
+  applyRole();
+  $("session-select").innerHTML = SESSIONS.map(s => `<option value="${s.key}">${esc(s.name)}</option>`).join("");
+  $("log-session").innerHTML = $("session-select").innerHTML;
+  $("log-date").value = todayStr();
+  $("fin-date").value = todayStr();
+  refreshAll();
+}
+$("login-form").addEventListener("submit", async e => {
+  e.preventDefault(); clearMsg("login-msg");
+  const { error } = await sb.auth.signInWithPassword({ email: e.target.email.value.trim(), password: e.target.password.value });
+  if(error){ msg("login-msg", "Email or password is not right.", false); return; }
+  enterAdmin();
+});
+$("signout-btn").addEventListener("click", async () => {
+  await sb.auth.signOut();
+  $("signout-btn").hidden = true; isAdmin = false; showView("login");
+});
+sb.auth.getSession().then(({ data }) => { if(data.session) enterAdmin(); else showView("login"); });
+
+// ---- Data loading ----
+async function loadMembers(){
+  const { data, error } = await sb.from("members").select("*").order("joined_at", { ascending: false });
+  if(error) throw error;
+  return data || [];
+}
+async function refreshAll(){
+  clearMsg("admin-msg");
+  try{
+    const members = await loadMembers();
+    const now = new Date();
+    const activeN = members.filter(m => m.status === "active" && m.expires_at && new Date(m.expires_at) > now).length;
+    $("stat-active").textContent = activeN;
+    $("stat-founders").textContent = Math.max(0, FOUNDERS_LIMIT - members.filter(m => m.tier === "founders").length);
+
+    $("member-rows").innerHTML = members.map(m => {
+      const active = m.status === "active" && m.expires_at && new Date(m.expires_at) > now;
+      const st = active ? "active" : (m.status === "active" ? "expired" : "pending");
+      return `<tr><td>${esc(m.full_name)}</td><td class="mono">${esc(m.code)}</td><td>${esc(TIER_NAMES[m.tier]||m.tier)}</td>
+        <td><span class="pill ${st}">${st}</span></td><td>${m.expires_at ? new Date(m.expires_at).toLocaleDateString() : "–"}</td><td>${esc(m.phone)}</td></tr>`;
+    }).join("") || `<tr><td colspan="6" class="muted">No members yet.</td></tr>`;
+    applyMemberSearch();
+    window._members = members;
+    renderSignups(members);
+
+    if(isAdmin){
+      await loadPayments();
+      await renderRevenue();
+      const mr = rangeFor("month", todayStr());
+      const { data } = await sb.rpc("revenue_summary", { p_from: mr.start.toISOString(), p_to: mr.end.toISOString() });
+      const total = (data || []).reduce((s, r) => s + Number(r.revenue || 0), 0);
+      $("stat-revenue").textContent = fmt(total);
+    }
+    await renderAttendance();
+  }catch(err){ msg("admin-msg", friendly(err), false); }
+}
+$("refresh-btn").addEventListener("click", refreshAll);
+
+async function loadPayments(){
+  const { data, error } = await sb.from("payments").select("*").eq("status", "pending").order("created_at", { ascending: true });
+  if(error) throw error;
+  const rows = data || [];
+  $("stat-pending").textContent = rows.length;
+  const members = window._members || [];
+  $("pay-rows").innerHTML = rows.length ? rows.map(p => {
+    const m = members.find(x => x.code === p.member_code) || {};
+    return `<tr><td>${esc(m.full_name||"–")}<div class="muted mono">${esc(p.member_code)}</div></td>
+      <td>${esc(TIER_NAMES[p.tier]||p.tier)}</td><td>${fmt(p.amount_ghs)}</td>
+      <td class="mono">${esc(p.momo_txn_id)}</td>
+      <td><button class="btn small" data-confirm="${esc(p.id)}">Confirm</button></td></tr>`;
+  }).join("") : `<tr><td colspan="5" class="muted">No payments waiting.</td></tr>`;
+  document.querySelectorAll("[data-confirm]").forEach(b => b.addEventListener("click", () => confirmPayment(b.dataset.confirm, b)));
+}
+async function confirmPayment(id, btn){
+  btn.disabled = true;
+  try{
+    const { error } = await sb.rpc("confirm_payment", { p_payment: id });
+    if(error) throw error;
+    msg("admin-msg", "Payment confirmed. The membership is now active.", true);
+    refreshAll();
+  }catch(err){ msg("admin-msg", friendly(err), false); btn.disabled = false; }
+}
+
+// ---- Check-in ----
+async function checkIn(raw){
+  clearMsg("checkin-msg");
+  let code = String(raw||"").trim().toUpperCase();
+  if(code.startsWith("FIE:")) code = code.slice(4);
+  if(!code){ msg("checkin-msg","No code found.",false); return; }
+  const key = $("session-select").value;
+  try{
+    const { data, error } = await sb.rpc("check_in", { p_code: code, p_session: key });
+    if(error) throw error;
+    const name = ((window._members||[]).find(m => m.code === code) || {}).full_name || code;
+    const text = {
+      ok: "✓ " + name + " checked in for " + sessionName(key) + ".",
+      duplicate: name + " is already checked in for " + sessionName(key) + " today.",
+      inactive: name + " does not have an active membership. Check payment or renewal.",
+      unknown: "Unknown member code: " + code
+    }[data] || "Check-in finished.";
+    msg("checkin-msg", text, data === "ok");
+    renderAttendance();
+  }catch(err){ msg("checkin-msg", friendly(err), false); }
+}
+$("manual-btn").addEventListener("click", () => checkIn($("manual-code").value));
+
+function decodeQR(file){
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas");
+      c.width = img.width; c.height = img.height;
+      const ctx = c.getContext("2d");
+      ctx.drawImage(img, 0, 0);
+      const d = ctx.getImageData(0, 0, c.width, c.height);
+      const q = (typeof jsQR === "function") ? jsQR(d.data, c.width, c.height) : null;
+      q ? resolve(q.data) : reject(new Error("No QR code found in that image. Try a clearer photo."));
+    };
+    img.onerror = () => reject(new Error("Could not read that image."));
+    img.src = URL.createObjectURL(file);
+  });
+}
+$("scan-file").addEventListener("change", async e => {
+  const file = e.target.files[0]; if(!file) return;
+  try{ await checkIn(await decodeQR(file)); }
+  catch(err){ msg("checkin-msg", err.message, false); }
+  e.target.value = "";
+});
+
+// ---- Attendance ----
+async function renderAttendance(){
+  const r = rangeFor($("log-period").value, $("log-date").value);
+  const key = $("log-session").value;
+  $("log-range").textContent = "Showing " + r.label;
+  try{
+    const { data, error } = await sb.from("checkins").select("*")
+      .gte("checked_in_at", r.start.toISOString()).lt("checked_in_at", r.end.toISOString())
+      .order("checked_in_at", { ascending: false });
+    if(error) throw error;
+    const day = data || [];
+    const members = window._members || [];
+    const sel = day.filter(c => c.session_key === key);
+    $("att-count").textContent = sel.length;
+    $("att-summary").innerHTML = SESSIONS.map(s => `${esc(s.name)}: <strong>${day.filter(c => c.session_key === s.key).length}</strong>`).join("<br>")
+      + `<br>Unique members: <strong>${new Set(day.map(c => c.member_code)).size}</strong>`;
+    $("log-rows").innerHTML = sel.map(c => {
+      const m = members.find(x => x.code === c.member_code) || {};
+      return `<tr><td>${new Date(c.checked_in_at).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td>
+        <td>${esc(m.full_name||"")}</td><td class="mono">${esc(c.member_code)}</td><td>${esc(sessionName(c.session_key))}</td></tr>`;
+    }).join("") || `<tr><td colspan="4" class="muted">No check-ins for this session in this period.</td></tr>`;
+  }catch(err){ msg("admin-msg", friendly(err), false); }
+}
+["log-session","log-date","log-period"].forEach(id => $(id).addEventListener("change", renderAttendance));
+
+// ---- Revenue ----
+async function renderRevenue(){
+  const r = rangeFor($("fin-period").value, $("fin-date").value);
+  $("fin-range").textContent = r.label;
+  const { data, error } = await sb.rpc("revenue_summary", { p_from: r.start.toISOString(), p_to: r.end.toISOString() });
+  if(error) throw error;
+  const rows = data || [];
+  $("fin-total").textContent = fmt(rows.reduce((s, x) => s + Number(x.revenue||0), 0));
+  $("fin-count").textContent = rows.reduce((s, x) => s + Number(x.payments||0), 0);
+  $("fin-rows").innerHTML = rows.map(x => `<tr><td>${esc(TIER_NAMES[x.tier]||x.tier)}</td><td>${x.payments}</td><td>${fmt(x.revenue)}</td></tr>`).join("")
+    || `<tr><td colspan="3" class="muted">No confirmed payments in this period.</td></tr>`;
+}
+["fin-period","fin-date"].forEach(id => $(id).addEventListener("change", () => isAdmin && renderRevenue().catch(err => msg("admin-msg", friendly(err), false))));
+
+// ---- Member search ----
+function applyMemberSearch(){
+  const q = $("member-search").value.trim().toLowerCase();
+  document.querySelectorAll("#member-rows tr").forEach(tr => { tr.hidden = !!q && !tr.textContent.toLowerCase().includes(q); });
+}
+$("member-search").addEventListener("input", applyMemberSearch);
+// ---- Sign-ups waiting for payment ----
+function renderSignups(members){
+  const cutoff = addDays(new Date(), -7);
+  const recent = members.filter(m => m.joined_at && new Date(m.joined_at) >= cutoff);
+  const waiting = members.filter(m => m.status === "pending");
+  $("stat-new").textContent = recent.length;
+  $("signup-rows").innerHTML = waiting.length ? waiting.map(m =>
+    `<tr><td>${esc(m.full_name)}</td><td class="mono">${esc(m.code)}</td><td>${esc(TIER_NAMES[m.tier]||m.tier)}</td><td>${esc(m.phone)}</td>
+     <td>${new Date(m.joined_at).toLocaleString([], {day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</td></tr>`
+  ).join("") : `<tr><td colspan="5" class="muted">No sign-ups waiting for payment.</td></tr>`;
+  $("last-refresh").textContent = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"});
+}
+
+// ---- Automatic refresh every 30 seconds while the admin screen is open ----
+setInterval(() => {
+  if(!$("view-admin").hidden) refreshAll();
+}, 30000);
+</script>
+</body>
+</html>
