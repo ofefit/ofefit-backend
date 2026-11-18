@@ -86,11 +86,12 @@ label{font-size:14px;color:var(--mut)}
   <div class="block">
     <h2>Schedule</h2>
     <div class="grid">
-      <div class="card"><img class="thumb" src="img/01_lets_burn.png" alt="Chale, Let's Burn"><h3>Chale, Let's Burn</h3><p class="muted">Tuesday · 6:30–8:00pm</p><p>Evening aerobics.</p></div>
-      <div class="card"><img class="thumb" src="img/02_hustle_thursday.png" alt="Hustle Thursday"><h3>Hustle Thursday</h3><p class="muted">Thursday · 6:30–8:00pm</p><p>Evening aerobics.</p></div>
-      <div class="card"><img class="thumb" src="img/03_morning_aerobics.png" alt="Nkɔso Saturdays"><h3>Nkɔso Saturdays</h3><p class="muted">Two Saturdays a month · 7:00–8:30am</p><p>Morning aerobics. The fourth Saturday is a rest day.</p></div>
-      <div class="card"><img class="thumb" src="img/04_health_walk.png" alt="Akwaaba Health Walk"><h3>Akwaaba Health Walk</h3><p class="muted">First Saturday · 6:30am</p><p>Walk, then yoga and stretching to finish.</p></div>
-      <div class="card"><img class="thumb" src="img/05_bi_monthly_fitness_event.png" alt="Big Night"><h3>Big Night</h3><p class="muted">Every second month · Friday evening</p><p>DJ-led night for up to 300 people.</p></div>
+      <div class="card"><img class="thumb" src="img/01_lets_burn.png" alt="Chale, Let's Burn"><h3>Chale, Let's Burn</h3><p class="muted">Tuesday · 6:30pm</p><p>Evening aerobics at the venue.</p></div>
+      <div class="card"><img class="thumb" src="img/02_hustle_thursday.png" alt="Hustle Thursday"><h3>Hustle Thursday</h3><p class="muted">Thursday · 6:30pm</p><p>Evening aerobics at the venue.</p></div>
+      <div class="card"><h3>Outdoor Community Sessions</h3><p class="muted">Monday and Wednesday · 6:30pm</p><p>Open-air sessions at the community space, open to all members.</p></div>
+      <div class="card"><h3>University Gym Sessions</h3><p class="muted">Friday · 6:30pm and Saturday · 8:00am</p><p>Classes at the university gym.</p></div>
+      <div class="card"><img class="thumb" src="img/04_health_walk.png" alt="Ofefit Series Monthly Walk"><h3>Ofefit Series Monthly Walk</h3><p class="muted">First Saturday</p><p>First Saturday Sunrise Walk starting at 5:30am - finish with Yoga/Stretch</p></div>
+      <div class="card"><img class="thumb" src="img/05_bi_monthly_fitness_event.png" alt="Ahoɔden Kɛse Night"><h3>Ahoɔden Kɛse Night</h3><p class="muted">Every second month · Friday evening</p><p>DJ-led night for up to 300 people.</p></div>
     </div>
   </div>
 
@@ -168,13 +169,10 @@ const CFG = window.OFEFIT_CONFIG;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_PUBLISHABLE_KEY);
 const $ = id => document.getElementById(id);
 const TIERS = [
-  {id:"student", name:"ofefit Student", price:60, days:30, icon:"🎓", cls:"t-student", thumb:"06_student_membership.png", desc:"Tue & Thu, both Saturday aerobics, walk. UCC student ID required."},
-  {id:"weekend", name:"ofefit Weekend", price:45, days:30, icon:"🌤️", cls:"t-weekend", thumb:"07_weekend_membership.png", desc:"Both Saturday aerobics, walk and yoga."},
-  {id:"flex", name:"ofefit Flex", price:90, days:30, icon:"🔥", cls:"t-flex", thumb:"08_flex_membership.png", desc:"Tue & Thu classes, walk."},
-  {id:"core", name:"ofefit Core", price:120, days:30, icon:"⭐", cls:"t-core", thumb:"09_core_member.png", desc:"Tue & Thu, both Saturday aerobics, walk, yoga, 2 guest passes a month."},
-  {id:"founders", name:"Founders Core", price:100, days:30, icon:"🏆", cls:"t-founders", thumb:"10_core_founding_members.png", desc:"Core benefits, price locked for 6 months. First 25 sign-ups only."},
-  {id:"family", name:"ofefit Family", price:200, days:30, icon:"👨‍👩‍👧", cls:"t-family", thumb:"11_family_membership.png", desc:"2 adults and up to 2 children under 16. All sessions."},
-  {id:"annual", name:"Core Annual", price:1200, days:365, icon:"🎁", cls:"t-annual", thumb:"12_yearly_membership.png", desc:"Core for 12 months, with 2 months free."}
+  {id:"student", name:"Campus", price:60, days:30, icon:"🎓", cls:"t-student", thumb:"06_student_membership.png", desc:"University gym classes (Friday evening and Saturday morning) and outdoor community sessions. UCC student ID required."},
+  {id:"weekend", name:"Community", price:100, days:30, icon:"🌤️", cls:"t-weekend", thumb:"07_community_membership.png", desc:"Outdoor community sessions and university classes, plus one venue class a week."},
+  {id:"core", name:"Core", price:120, days:30, icon:"⭐", cls:"t-core", thumb:"09_core_member.png", desc:"Everything: venue, outdoor and university classes, plus two guest passes a month."},
+  {id:"family", name:"Family", price:180, days:30, icon:"👨‍👩‍👧", cls:"t-family", thumb:"11_family_membership.png", desc:"2 adults and up to 2 children under 16. All sessions."}
 ];
 const tierById = id => TIERS.find(t => t.id === id);
 const fmt = n => "GHS " + Number(n || 0).toLocaleString();
