@@ -7,3 +7,4 @@ window.OFEFIT_CONFIG = {
   MOMO_NUMBER: "059 510 8915",
   MOMO_NAME: "ofefit",
   WHATSAPP_URL: "https://chat.whatsapp.com/CYcpMqCHf830Ym7vyFaJ8X?s=cl&p=a&mlu=4&ilr=4&iam=2",
+};
