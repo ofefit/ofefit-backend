@@ -1,9 +1,10 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ofefit admin</title>
+<title>OfeFit admin</title>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
@@ -147,13 +148,13 @@ th{background:#f3eefc}
 const CFG = window.OFEFIT_CONFIG;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_PUBLISHABLE_KEY);
 const $ = id => document.getElementById(id);
-const TIER_NAMES = {student:"ofefit Student", weekend:"ofefit Weekend", flex:"ofefit Flex", core:"ofefit Core", founders:"Founders Core", family:"ofefit Family", annual:"Core Annual"};
+const TIER_NAMES = {student:"Campus", weekend:"Community", core:"Core", family:"Family", flex:"Flex (retired)", founders:"Founders (retired)", annual:"Core Annual (retired)"};
 const SESSIONS = [
   {key:"tue",  name:"Chale, Let's Burn"},
   {key:"thu",  name:"Hustle Thursday"},
   {key:"sat",  name:"Nkɔso Saturdays"},
   {key:"walk", name:"Akwaaba Health Walk"},
-  {key:"big",  name:"Big Night"}
+  {key:"big",  name:"OfeFit & Vibe Fridays"}
 ];
 const FOUNDERS_LIMIT = 25;
 const sessionName = k => (SESSIONS.find(s => s.key === k) || {}).name || k;
