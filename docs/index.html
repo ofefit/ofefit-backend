@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ofefit</title>
+<title>OfeFit</title>
 <script src="config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -33,6 +33,9 @@ h3{font-size:17px;margin:0 0 6px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin:14px 0}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 2px rgba(16,24,40,.05)}
 .thumb{display:block;width:100%;height:auto;border-radius:12px;margin-bottom:10px}
+.thumb{aspect-ratio:4/3;object-fit:cover}
+.sname{font-size:21px;font-weight:800;color:var(--plum);margin:6px 0 4px;line-height:1.25}
+.loc{font-size:14px;font-weight:700;color:var(--teal);margin:0 0 6px}
 .tier{border-top:6px solid var(--c,var(--teal))}
 .tier .price{color:var(--c,var(--teal))}
 .t-student{--c:var(--sky)}.t-weekend{--c:var(--sun)}.t-flex{--c:var(--teal)}.t-core{--c:var(--plum)}
@@ -73,7 +76,7 @@ label{font-size:14px;color:var(--mut)}
 <div class="banner-wrap">
   <div class="banner-box">
     <img class="banner" src="img/banner.jpg" alt="Community fitness class in Cape Coast">
-    <button class="btn banner-btn" data-go="join">Join ofefit</button>
+    <button class="btn banner-btn" data-go="join">Join OfeFit</button>
   </div>
   <p class="caption">Community fitness in Cape Coast. Let's do it together.</p>
 </div>
@@ -86,14 +89,14 @@ label{font-size:14px;color:var(--mut)}
   <div class="block">
     <h2>Schedule</h2>
     <div class="grid">
-      <div class="card"><img class="thumb" src="img/01_lets_burn.png" alt="Chale, Let's Burn"><h3>Chale, Let's Burn</h3><p class="muted">Tuesday · 6:30pm</p><p>Evening aerobics at the venue.</p></div>
-      <div class="card"><img class="thumb" src="img/02_hustle_thursday.png" alt="Hustle Thursday"><h3>Hustle Thursday</h3><p class="muted">Thursday · 6:30pm</p><p>Evening aerobics at the venue.</p></div>
-      <div class="card"><h3>Level Up</h3><p class="muted">Monday · 6:30pm</p><p>Open-air session at Community Gardens, open to all members.</p></div>
-      <div class="card"><h3>Midweek Reset</h3><p class="muted">Wednesday · 6:30pm</p><p>Open-air session at Community Gardens, open to all members.</p></div>
-      <div class="card"><h3>Varsity Flow</h3><p class="muted">Friday · 6:30pm</p><p>Classes at the university gym.</p></div>
-      <div class="card"><h3>Nkɔso Saturdays</h3><p class="muted">Saturday · 8:00am</p><p>Morning classes at the university gym.</p></div>
-      <div class="card"><img class="thumb" src="img/04_health_walk.png" alt="Ofefit Series Monthly Walk"><h3>Ofefit Series Monthly Walk</h3><p class="muted">First Saturday</p><p>First Saturday Sunrise Walk starting at 5:30am - finish with Yoga/Stretch</p></div>
-      <div class="card"><img class="thumb" src="img/05_bi_monthly_fitness_event.png" alt="Ahoɔden Kɛse Night"><h3>Ahoɔden Kɛse Night</h3><p class="muted">Every second month · Friday evening</p><p>DJ-led night for up to 300 people.</p></div>
+      <div class="card"><img class="thumb" src="img/01_lets_burn.png" alt="Chale, Let's Burn"><h3 class="sname">Chale, Let's Burn</h3><p class="muted">Tuesday · 6:30pm</p><p class="loc">Location: The Children's Station</p><p>Evening aerobics.</p></div>
+      <div class="card"><img class="thumb" src="img/02_hustle_thursday.png" alt="Hustle Thursday"><h3 class="sname">Hustle Thursday</h3><p class="muted">Thursday · 6:30pm</p><p class="loc">Location: The Children's Station</p><p>Evening aerobics.</p></div>
+      <div class="card"><img class="thumb" src="img/level_up.jpg" alt="Level Up"><h3 class="sname">Level Up</h3><p class="muted">Monday · 6:30pm</p><p class="loc">Location: Community Gardens</p><p>Open-air session, open to all members.</p></div>
+      <div class="card"><img class="thumb" src="img/midweek_reset.jpg" alt="Midweek Reset"><h3 class="sname">Midweek Reset</h3><p class="muted">Wednesday · 6:30pm</p><p class="loc">Location: Community Gardens</p><p>Open-air session, open to all members.</p></div>
+      <div class="card"><img class="thumb" src="img/varsity_flow.jpg" alt="Varsity Flow"><h3 class="sname">Varsity Flow</h3><p class="muted">Friday · 6:30pm</p><p class="loc">Location: UCC Campus</p><p>Classes at the university gym.</p></div>
+      <div class="card"><img class="thumb" src="img/nkoso_saturdays.jpg" alt="Nkɔso Saturdays"><h3 class="sname">Nkɔso Saturdays</h3><p class="muted">Saturday · 8:00am</p><p class="loc">Location: UCC Campus</p><p>Morning classes at the university gym.</p></div>
+      <div class="card"><img class="thumb" src="img/04_health_walk.png" alt="OfeFit MOVE · WALK · VIBE"><h3 class="sname">OfeFit MOVE · WALK · VIBE</h3><p class="muted">First Saturday of the month</p><p class="loc">Walk Together. Live Healthier.</p><p>Sunrise walk starting @ 5:30a.m. Finish with 30 minutes of Stretching.</p><p class="muted">Routes &amp; location will be announced 1 week before the walk.</p><p class="muted">A Signature OfeFit Event Series.</p></div>
+      <div class="card"><img class="thumb" src="img/big_night.jpg" alt="OfeFit &amp; Vibe Fridays"><h3 class="sname">OfeFit &amp; Vibe Fridays</h3><p class="muted">Every second month · Friday evening</p><p>A fitness link-up where you will Sweat &amp; Socialize! DJ, aerobics, group challenges, give-aways.</p><p class="muted">Join our tribe so you don't miss the details.</p></div>
     </div>
   </div>
 
@@ -110,12 +113,12 @@ label{font-size:14px;color:var(--mut)}
     <h2>Memberships</h2>
     <div class="grid" id="tier-cards"></div>
   </div>
-  <p class="footer">ofefit · Cape Coast</p>
+  <p class="footer">OfeFit · Cape Coast</p>
 </section>
 
 <!-- JOIN -->
 <section id="view-join" class="view" hidden>
-  <h2>Join ofefit</h2>
+  <h2>Join OfeFit</h2>
   <p class="muted">Fill in the form, then pay by MoMo. Your membership activates once your payment is confirmed.</p>
   <form id="join-form" class="card">
     <div class="row">
