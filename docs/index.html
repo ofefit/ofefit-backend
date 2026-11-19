@@ -26,6 +26,8 @@ h3{font-size:17px;margin:0 0 6px}
 .banner{display:block;width:100%;height:auto;border-radius:18px;box-shadow:0 4px 18px rgba(16,24,40,.15)}
 .banner-btn{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font-size:17px;padding:12px 28px;box-shadow:0 4px 12px rgba(0,0,0,.25);white-space:nowrap}
 .caption{text-align:center;margin:12px 0 0;color:var(--mut);font-size:15px;font-weight:600}
+.wa-wrap{text-align:center;margin:14px 0 0}
+.btn.wa{background:#25D366;color:#fff;text-decoration:none;display:inline-block;padding:12px 24px;border-radius:999px;font-size:16px}
 .btn{background:var(--sun);color:#1d2430;border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;font-size:15px}
 .btn.sec{background:#fff;color:var(--plum);border:2px solid var(--plum)}
 .btn.small{padding:6px 10px;font-size:13px}
@@ -82,6 +84,7 @@ label{font-size:14px;color:var(--mut)}
     <button class="btn banner-btn" data-go="join">Join OfeFit</button>
   </div>
   <p class="caption">Community fitness in Cape Coast. Let's do it together.</p>
+  <p class="wa-wrap"><a id="wa-btn" class="btn wa" href="#" target="_blank" rel="noopener" hidden>JOIN OUR TRIBE</a></p>
 </div>
 
 <main>
@@ -116,6 +119,7 @@ label{font-size:14px;color:var(--mut)}
     <h2>Memberships</h2>
     <div class="grid" id="tier-cards"></div>
   </div>
+  <p class="wa-wrap"><a id="wa-btn-bottom" class="btn wa" href="#" target="_blank" rel="noopener" hidden>JOIN OUR TRIBE</a></p>
   <p class="footer">OfeFit · Cape Coast</p>
 </section>
 
@@ -198,6 +202,9 @@ function msg(id, text, ok){ const el=$(id); el.textContent=text; el.className="m
 function clearMsg(id){ const el=$(id); el.className="msg"; el.textContent=""; }
 // Turns database errors into plain language
 function friendly(err){ return (err && err.message) ? err.message.replace(/^.*?: /, "") : "Something went wrong. Please try again."; }
+
+// ---- WhatsApp group button (shown only when a link is set in config.js) ----
+if(CFG.WHATSAPP_URL){ ["wa-btn","wa-btn-bottom"].forEach(id => { const b = $(id); b.href = CFG.WHATSAPP_URL; b.hidden = false; }); }
 
 // ---- Navigation ----
 function showView(name){
