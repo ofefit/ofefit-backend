@@ -227,7 +227,7 @@ async function refreshAll(){
       const active = m.status === "active" && m.expires_at && new Date(m.expires_at) > now;
       const st = active ? "active" : (m.status === "active" ? "expired" : "pending");
       return `<tr><td>${esc(m.full_name)}</td><td class="mono">${esc(m.code)}</td><td>${esc(TIER_NAMES[m.tier]||m.tier)}</td>
-        <td><span class="pill ${st}">${st}</span></td><td>${m.expires_at ? new Date(m.expires_at).toLocaleDateString() : "–"}</td><td>${esc(m.phone)}</td><td><button class="btn sec small" data-copy="${esc(m.code)}">Copy message</button></td></tr>`;
+        <td><span class="pill ${st}">${st}</span></td><td>${m.expires_at ? new Date(m.expires_at).toLocaleDateString() : "–"}</td><td>${esc(m.phone)}</td><td><button class="btn sec small" data-copy="${esc(m.code)}">${m.status === "active" ? "Copy message" : "Copy payment reminder"}</button></td></tr>`;
     }).join("") || `<tr><td colspan="7" class="muted">No members yet.</td></tr>`;
     applyMemberSearch();
     document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => copyMessage(b.dataset.copy, b)));
@@ -343,23 +343,37 @@ async function renderAttendance(){
 }
 ["log-session","log-date","log-period"].forEach(id => $(id).addEventListener("change", renderAttendance));
 
-// ---- Copy confirmation message for a member ----
-function buildMessage(m){
-  const link = location.href.split("?")[0].replace(/admin\.html$/, "");
-  return `Hi ${m.full_name}, your OfeFit payment is confirmed. Your member ID is ${m.code}. Go to ${link}, tap My card, enter your ID and press Show card to see your active membership and QR code. See you at the session!`;
+// ---- Copy messages for members (confirmation or payment reminder) ----
+function publicLink(){
+  return location.href.split("?")[0].replace(/admin\.html$/, "");
+}
+function buildConfirmation(m){
+  return `Hi ${m.full_name}, your OfeFit payment is confirmed. Your member ID is ${m.code}. Go to ${publicLink()}, tap My card, enter your ID and press Show card to see your active membership and QR code. See you at the session!`;
+}
+function buildReminder(m){
+  return `Hi ${m.full_name}, thanks for joining OfeFit. Your member ID is ${m.code}. Please pay ${fmt(m.price_ghs)} by MoMo to ${CFG.MOMO_NUMBER} (name: ${CFG.MOMO_NAME}), using ${m.code} as the reference. Then go to ${publicLink()}, scroll to Join, enter your MoMo transaction ID and press I have paid. We'll confirm your membership once we receive it.`;
 }
 async function copyMessage(code, btn){
   const m = (window._members || []).find(x => x.code === code);
   if(!m) return;
-  if(m.status !== "active"){ msg("admin-msg", "Confirm this member's payment first, then copy the message.", false); return; }
-  const text = buildMessage(m);
+  let text;
+  if(m.status === "active"){
+    text = buildConfirmation(m);
+  } else if(m.status === "pending"){
+    text = buildReminder(m);
+  } else {
+    msg("admin-msg", "This membership has expired. Renewal messages aren't set up yet.", false);
+    return;
+  }
+  const original = btn.dataset.label || btn.textContent;
+  btn.dataset.label = original;
   try{
     await navigator.clipboard.writeText(text);
     btn.textContent = "Copied ✓";
   }catch(_){
     window.prompt("Copy this message:", text);
   }
-  setTimeout(() => { btn.textContent = "Copy message"; }, 2000);
+  setTimeout(() => { btn.textContent = original; }, 2000);
 }
 
 // ---- Revenue ----
