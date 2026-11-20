@@ -5,6 +5,6 @@ window.OFEFIT_CONFIG = {
   SUPABASE_URL: "https://yjljundvlhcpuckrotxj.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_KUBGpamIfMxm-ESsMtm_Yw_5-s_4J1j",
   MOMO_NUMBER: "059 510 8915",
-  MOMO_NAME: "OfeFit",
+  MOMO_NAME: "Syrene May",
   WHATSAPP_URL: "https://chat.whatsapp.com/CYcpMqCHf830Ym7vyFaJ8X?s=cl&p=a&mlu=4&ilr=4&iam=2"
 };
