@@ -67,14 +67,43 @@ label{font-size:14px;color:var(--mut)}
 .box{background:#fff8e1;border:2px dashed var(--sun);border-radius:12px;padding:14px;margin:12px 0}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:1px}
 .block{margin:18px 0}
-.eat-day{padding:12px 14px}
-.eat-day h4{margin:0 0 6px;font-size:16px;color:var(--plum)}
-.eat-day p{margin:4px 0;font-size:15px}
-.eat-day b{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.5px;display:block}
+.eat-hero{background:linear-gradient(135deg,var(--leaf),var(--teal));color:#fff;border-radius:18px;padding:22px 24px;margin:8px 0 14px;box-shadow:0 4px 18px rgba(15,123,95,.25)}
+.eat-hero h2{color:#fff;font-size:26px;margin:0 0 6px}
+.eat-hero .eat-intro{margin:0;padding:0;list-style:none;font-size:15px;opacity:.95}
+.eat-hero .eat-intro li{padding:2px 0}
+.eat-plate{border:0;background:linear-gradient(90deg,#fff8e1,#eefaf4);border-left:6px solid var(--sun)}
+.eat-plate p{font-size:17px;margin:0;color:var(--ink)}
+.eat-plate .kicker{font-size:12px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);font-weight:700;margin:0 0 4px}
+.eat-sec{display:flex;align-items:center;gap:10px;margin:26px 0 10px}
+.eat-sec::after{content:"";flex:1;height:3px;border-radius:99px;background:linear-gradient(90deg,var(--coral),var(--sun))}
+.eat-sec h2{margin:0;font-size:20px;white-space:nowrap}
+.eat-days{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.eat-day{padding:0;overflow:hidden;border-top:0}
+.eat-day .dh{background:var(--c);color:#fff;padding:9px 14px;font-weight:800;font-size:16px;letter-spacing:.3px}
+.eat-day .db{padding:10px 14px 12px}
+.eat-day p{margin:6px 0;font-size:15px;line-height:1.4}
+.eat-day .ml{display:block;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--mut);margin-top:8px}
+.eat-days .eat-day:nth-child(6n+1){--c:var(--coral)}
+.eat-days .eat-day:nth-child(6n+2){--c:var(--sun);}
+.eat-days .eat-day:nth-child(6n+3){--c:var(--leaf)}
+.eat-days .eat-day:nth-child(6n+4){--c:var(--sky)}
+.eat-days .eat-day:nth-child(6n+5){--c:var(--plum)}
+.eat-days .eat-day:nth-child(6n+6){--c:var(--teal)}
+.eat-day .dh{color:#fff}
+.eat-days .eat-day:nth-child(1) .dh,.eat-days .eat-day:nth-child(2) .dh{color:#1d2430}
+.eat-sun{border-top:6px solid var(--plum)}
+.eat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.eat-shop{border-top:5px solid var(--c,var(--teal))}
+.eat-shop h3{color:var(--c,var(--teal));font-size:16px;margin-bottom:4px}
+.eat-fav{border-top:5px solid var(--c,var(--coral))}
 .eat-list{list-style:none;padding:0;margin:0}
-.eat-list li{padding:6px 0;border-bottom:1px solid var(--line);font-size:15px}
-.eat-list label{color:var(--ink);font-size:15px;display:flex;gap:10px;align-items:flex-start}
-.eat-list input{width:auto;margin:4px 0 0}
+.eat-list li{padding:6px 0;border-bottom:1px dashed var(--line);font-size:15px}
+.eat-list li:last-child{border-bottom:0}
+.eat-list label{color:var(--ink);font-size:15px;display:flex;gap:10px;align-items:flex-start;cursor:pointer}
+.eat-list label span{transition:color .15s}
+.eat-list input{width:18px;height:18px;margin:3px 0 0;accent-color:var(--teal);flex:none}
+.eat-list input:checked + span{color:var(--mut);text-decoration:line-through}
+.eat-rules{background:#f7f5ff;border:0}
 @media print{
   header,nav,.no-print{display:none !important}
   body *{visibility:hidden}
@@ -245,33 +274,41 @@ if(CFG.WHATSAPP_URL){ const wa = $("wa-btn"); wa.href = CFG.WHATSAPP_URL; wa.hid
 // ---- Eat Well (members only) ----
 function renderEat(c){
   const list = a => `<ul class="eat-list">${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
-  const shop = c.shopping.map(g => `
-    <div class="card"><h3>${esc(g.group)}</h3>
-      <ul class="eat-list">${g.items.map(i => `<li><label><input type="checkbox"> <span>${esc(i)}</span></label></li>`).join("")}</ul>
+  const sec = t => `<div class="eat-sec"><h2>${t}</h2></div>`;
+  const shopColours = ["var(--leaf)","var(--coral)","var(--sun)","var(--sky)"];
+  const shop = c.shopping.map((g, i) => `
+    <div class="card eat-shop" style="--c:${shopColours[i % shopColours.length]}"><h3>${esc(g.group)}</h3>
+      <ul class="eat-list">${g.items.map(x => `<li><label><input type="checkbox"> <span>${esc(x)}</span></label></li>`).join("")}</ul>
     </div>`).join("");
   const days = c.week.map(d => `
-    <div class="card eat-day"><h4>${esc(d.day)}</h4>
-      <p><b>Breakfast</b>${esc(d.breakfast)}</p>
-      <p><b>Lunch</b>${esc(d.lunch)}</p>
-      <p><b>Dinner</b>${esc(d.dinner)}</p>
+    <div class="card eat-day"><div class="dh">${esc(d.day)}</div>
+      <div class="db">
+        <span class="ml">Breakfast</span><p>${esc(d.breakfast)}</p>
+        <span class="ml">Lunch</span><p>${esc(d.lunch)}</p>
+        <span class="ml">Dinner</span><p>${esc(d.dinner)}</p>
+      </div>
     </div>`).join("");
   const favs = c.favourites.map(f => `
-    <div class="card"><h3>${esc(f.name)}</h3><p>${esc(f.swap)}</p><p class="muted">Portion: ${esc(f.portion)}</p></div>`).join("");
+    <div class="card eat-fav"><h3>${esc(f.name)}</h3><p>${esc(f.swap)}</p><p class="muted">Portion: ${esc(f.portion)}</p></div>`).join("");
   $("eat-content").innerHTML = `
-    <div class="no-print" style="margin:12px 0"><button class="btn" onclick="window.print()">Print this plan</button></div>
-    <h2>${esc(c.title)}</h2>
-    ${list(c.intro)}
-    <div class="card" style="border-top:6px solid var(--teal);margin-top:12px"><h3>The plate rule</h3><p style="font-size:17px"><strong>${esc(c.plate)}</strong></p></div>
-    <h2>Monday to Saturday</h2>
-    <div class="grid">${days}</div>
-    <div class="card"><h3>Sunday prep (about 75 minutes)</h3>${list(c.prep)}<p class="muted">${esc(c.sunday)}</p></div>
-    <h2>Shopping list</h2>
-    <div class="grid">${shop}</div>
-    <h2>Local favourites</h2>
+    <div class="no-print" style="margin:12px 0;text-align:right"><button class="btn" onclick="window.print()">Print this plan</button></div>
+    <div class="eat-hero">
+      <h2>${esc(c.title)}</h2>
+      <ul class="eat-list eat-intro">${c.intro.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+    </div>
+    <div class="card eat-plate"><p class="kicker">The plate rule</p><p><strong>${esc(c.plate)}</strong></p></div>
+    ${sec("Monday to Saturday")}
+    <div class="eat-days">${days}</div>
+    ${sec("Sunday prep")}
+    <div class="card eat-sun"><h3>About 75 minutes</h3>${list(c.prep)}<p class="muted">${esc(c.sunday)}</p></div>
+    ${sec("Shopping list")}
+    <div class="eat-grid">${shop}</div>
+    ${sec("Local favourites")}
     <p class="muted">Swap one dinner a week for a local favourite, using these portions.</p>
-    <div class="grid">${favs}</div>
-    <div class="card"><h3>Simple rules</h3>${list(c.rules)}</div>
-    <p class="muted">${esc(c.disclaimer)}</p>`;
+    <div class="eat-grid">${favs}</div>
+    ${sec("Simple rules")}
+    <div class="card eat-rules">${list(c.rules)}</div>
+    <p class="muted" style="margin-top:18px">${esc(c.disclaimer)}</p>`;
   $("eat-content").hidden = false;
 }
 async function openEat(){
