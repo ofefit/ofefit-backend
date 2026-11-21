@@ -67,6 +67,21 @@ label{font-size:14px;color:var(--mut)}
 .box{background:#fff8e1;border:2px dashed var(--sun);border-radius:12px;padding:14px;margin:12px 0}
 .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;letter-spacing:1px}
 .block{margin:18px 0}
+.eat-day{padding:12px 14px}
+.eat-day h4{margin:0 0 6px;font-size:16px;color:var(--plum)}
+.eat-day p{margin:4px 0;font-size:15px}
+.eat-day b{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.5px;display:block}
+.eat-list{list-style:none;padding:0;margin:0}
+.eat-list li{padding:6px 0;border-bottom:1px solid var(--line);font-size:15px}
+.eat-list label{color:var(--ink);font-size:15px;display:flex;gap:10px;align-items:flex-start}
+.eat-list input{width:auto;margin:4px 0 0}
+@media print{
+  header,nav,.no-print{display:none !important}
+  body *{visibility:hidden}
+  #eat-content,#eat-content *{visibility:visible}
+  #eat-content{position:absolute;left:0;top:0;width:100%}
+  .card{box-shadow:none;break-inside:avoid}
+}
 .muted{color:var(--mut);font-size:13px}
 .footer{text-align:center;color:var(--mut);font-size:13px;padding:24px 0}
 </style>
@@ -78,6 +93,7 @@ label{font-size:14px;color:var(--mut)}
     <button data-v="home" class="on">Home</button>
     <button data-v="join">Join</button>
     <button data-v="member">My card</button>
+    <button data-v="eat">Eat Well</button>
   </nav>
 </header>
 
@@ -169,6 +185,21 @@ label{font-size:14px;color:var(--mut)}
   </div>
 </section>
 
+<!-- EAT WELL (members only) -->
+<section id="view-eat" class="view" hidden>
+  <h2>Eat Well</h2>
+  <p class="muted">For members. Enter your member code to see this week's plan.</p>
+  <div class="card no-print" style="max-width:480px">
+    <label>Your member code</label>
+    <div style="display:flex;gap:8px">
+      <input id="eat-code" placeholder="FIE-XXXXXX" style="text-transform:uppercase">
+      <button class="btn" id="eat-btn">Open plan</button>
+    </div>
+    <div class="msg" id="eat-msg"></div>
+  </div>
+  <div id="eat-content" hidden></div>
+</section>
+
 <!-- MY CARD -->
 <section id="view-member" class="view" hidden>
   <h2>My membership card</h2>
@@ -210,6 +241,57 @@ function friendly(err){ return (err && err.message) ? err.message.replace(/^.*?:
 
 // ---- WhatsApp group button (shown only when a link is set in config.js) ----
 if(CFG.WHATSAPP_URL){ const wa = $("wa-btn"); wa.href = CFG.WHATSAPP_URL; wa.hidden = false; }
+
+// ---- Eat Well (members only) ----
+function renderEat(c){
+  const list = a => `<ul class="eat-list">${a.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`;
+  const shop = c.shopping.map(g => `
+    <div class="card"><h3>${esc(g.group)}</h3>
+      <ul class="eat-list">${g.items.map(i => `<li><label><input type="checkbox"> <span>${esc(i)}</span></label></li>`).join("")}</ul>
+    </div>`).join("");
+  const days = c.week.map(d => `
+    <div class="card eat-day"><h4>${esc(d.day)}</h4>
+      <p><b>Breakfast</b>${esc(d.breakfast)}</p>
+      <p><b>Lunch</b>${esc(d.lunch)}</p>
+      <p><b>Dinner</b>${esc(d.dinner)}</p>
+    </div>`).join("");
+  const favs = c.favourites.map(f => `
+    <div class="card"><h3>${esc(f.name)}</h3><p>${esc(f.swap)}</p><p class="muted">Portion: ${esc(f.portion)}</p></div>`).join("");
+  $("eat-content").innerHTML = `
+    <div class="no-print" style="margin:12px 0"><button class="btn" onclick="window.print()">Print this plan</button></div>
+    <h2>${esc(c.title)}</h2>
+    ${list(c.intro)}
+    <div class="card" style="border-top:6px solid var(--teal);margin-top:12px"><h3>The plate rule</h3><p style="font-size:17px"><strong>${esc(c.plate)}</strong></p></div>
+    <h2>Monday to Saturday</h2>
+    <div class="grid">${days}</div>
+    <div class="card"><h3>Sunday prep (about 75 minutes)</h3>${list(c.prep)}<p class="muted">${esc(c.sunday)}</p></div>
+    <h2>Shopping list</h2>
+    <div class="grid">${shop}</div>
+    <h2>Local favourites</h2>
+    <p class="muted">Swap one dinner a week for a local favourite, using these portions.</p>
+    <div class="grid">${favs}</div>
+    <div class="card"><h3>Simple rules</h3>${list(c.rules)}</div>
+    <p class="muted">${esc(c.disclaimer)}</p>`;
+  $("eat-content").hidden = false;
+}
+async function openEat(){
+  clearMsg("eat-msg");
+  const code = $("eat-code").value.trim().toUpperCase();
+  if(!code){ msg("eat-msg","Enter your member code.",false); return; }
+  try{
+    const { data, error } = await sb.rpc("get_eat_well", { p_code: code });
+    if(error) throw error;
+    if(!data){
+      $("eat-content").hidden = true;
+      msg("eat-msg","This plan is for active members. Check your code, or renew your membership.",false);
+      return;
+    }
+    renderEat(data);
+    try{ localStorage.setItem("ofefit_code", code); }catch(_){}
+  }catch(err){ msg("eat-msg", friendly(err), false); }
+}
+$("eat-btn").addEventListener("click", openEat);
+try{ const saved = localStorage.getItem("ofefit_code"); if(saved) $("eat-code").value = saved; }catch(_){}
 
 // ---- Navigation ----
 function showView(name){
@@ -280,7 +362,7 @@ $("txn-form").addEventListener("submit", async e => {
   try{
     const { error } = await sb.rpc("submit_payment", { p_code: pending.code, p_txn: e.target.txn.value.trim() });
     if(error) throw error;
-    msg("txn-msg","Thank you. We'll confirm your payment shortly. Check My card once it's active.",true);
+    msg("txn-msg","Thank you. Your member ID is " + pending.code + ". We'll confirm your payment shortly. Then tap My card, enter this ID and press Show card to see your active membership and QR code.",true);
     e.target.reset();
   }catch(err){ msg("txn-msg", friendly(err), false); }
 });
