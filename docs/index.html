@@ -288,8 +288,12 @@ function renderEat(c){
         <span class="ml">Dinner</span><p>${esc(d.dinner)}</p>
       </div>
     </div>`).join("");
-  const favs = c.favourites.map(f => `
-    <div class="card eat-fav"><h3>${esc(f.name)}</h3><p>${esc(f.swap)}</p><p class="muted">Portion: ${esc(f.portion)}</p></div>`).join("");
+  const FAV_PHOTOS = {"waakye":"waakye.jpg","light soup":"light_soup.jpg","fufu":"fufu.jpg","banku":"banku.jpg","red-red":"red_red.jpg","jollof":"jollof.jpg","palm nut":"palm_nut_soup.jpg"};
+  const photoFor = name => { const n = name.toLowerCase(); const k = Object.keys(FAV_PHOTOS).find(k => n.includes(k)); return k ? "img/" + FAV_PHOTOS[k] : ""; };
+  const favs = c.favourites.map(f => {
+    const pic = photoFor(f.name);
+    return `<div class="card eat-fav">${pic ? `<img class="thumb" src="${pic}" alt="${esc(f.name)}" loading="lazy">` : ""}<h3>${esc(f.name)}</h3><p>${esc(f.swap)}</p><p class="muted">Portion: ${esc(f.portion)}</p></div>`;
+  }).join("");
   $("eat-content").innerHTML = `
     <div class="no-print" style="margin:12px 0;text-align:right"><button class="btn" onclick="window.print()">Print this plan</button></div>
     <div class="eat-hero">
