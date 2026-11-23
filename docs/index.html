@@ -126,7 +126,7 @@ label{font-size:14px;color:var(--mut)}
   </nav>
 </header>
 
-<div class="banner-wrap">
+<div class="banner-wrap" id="home-banner">
   <div class="banner-box">
     <img class="banner" src="img/banner.jpg" alt="Community fitness class in Cape Coast">
     <button class="btn banner-btn" data-go="join">Join OfeFit</button>
@@ -175,6 +175,9 @@ label{font-size:14px;color:var(--mut)}
 
 <!-- JOIN -->
 <section id="view-join" class="view" hidden>
+  <div class="banner-wrap" style="padding:0;margin:0 0 14px">
+    <img class="banner" src="img/join_banner.jpg" alt="Join OfeFit" onerror="this.remove()">
+  </div>
   <h2>Join OfeFit</h2>
   <p class="muted">Fill in the form, then pay by MoMo. Your membership activates once your payment is confirmed.</p>
   <form id="join-form" class="card">
@@ -216,6 +219,9 @@ label{font-size:14px;color:var(--mut)}
 
 <!-- EAT WELL (members only) -->
 <section id="view-eat" class="view" hidden>
+  <div class="banner-wrap" style="padding:0;margin:0 0 14px">
+    <img class="banner" src="img/eat_well_banner.jpg" alt="Eat Well" onerror="this.remove()" style="border-radius:18px">
+  </div>
   <h2>Eat Well</h2>
   <p class="muted">For members. Enter your member code to see this week's plan.</p>
   <div class="card no-print" style="max-width:480px">
@@ -231,6 +237,9 @@ label{font-size:14px;color:var(--mut)}
 
 <!-- MY CARD -->
 <section id="view-member" class="view" hidden>
+  <div class="banner-wrap" style="padding:0;margin:0 0 14px">
+    <img class="banner" src="img/member_card_banner.jpg" alt="My membership card" onerror="this.remove()">
+  </div>
   <h2>My membership card</h2>
   <div class="card" style="max-width:480px;border-top:6px solid var(--plum)">
     <label>Your member code (from sign-up)</label>
@@ -336,6 +345,7 @@ try{ const saved = localStorage.getItem("ofefit_code"); if(saved) $("eat-code").
 
 // ---- Navigation ----
 function showView(name){
+  $("home-banner").hidden = name !== "home";
   document.querySelectorAll(".view").forEach(v => v.hidden = (v.id !== "view-"+name));
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.v === name));
   window.scrollTo(0,0);
