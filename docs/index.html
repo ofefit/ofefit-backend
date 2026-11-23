@@ -23,7 +23,7 @@ h2{font-size:22px;margin:8px 0 12px}
 h3{font-size:17px;margin:0 0 6px}
 .banner-wrap{max-width:700px;margin:16px auto 0;padding:0 20px}
 .banner-box{position:relative}
-.banner{display:block;width:100%;height:auto;border-radius:18px;box-shadow:0 4px 18px rgba(16,24,40,.15)}
+.banner{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:18px;box-shadow:0 4px 18px rgba(16,24,40,.15)}
 .banner-btn{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font-size:17px;padding:12px 28px;box-shadow:0 4px 12px rgba(0,0,0,.25);white-space:nowrap}
 .caption{text-align:center;margin:12px 0 0;color:var(--mut);font-size:15px;font-weight:600}
 .wa-wrap{text-align:center;margin:14px 0 0}
@@ -123,6 +123,7 @@ label{font-size:14px;color:var(--mut)}
     <button data-v="join">Join</button>
     <button data-v="member">My card</button>
     <button data-v="eat">Eat Well</button>
+    <button data-v="about">About</button>
   </nav>
 </header>
 
@@ -255,6 +256,28 @@ label{font-size:14px;color:var(--mut)}
       <div id="qr"></div>
       <p class="muted" style="text-align:center">Show this code at the gate. Staff scan it to check you in.</p>
     </div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="view-about" class="view" hidden>
+  <div class="banner-wrap" style="padding:0;margin:0 0 14px">
+    <img class="banner" src="img/about_banner.jpg" alt="About OfeFit" onerror="this.remove()">
+  </div>
+  <h2>About OfeFit</h2>
+  <div class="card" style="border-top:6px solid var(--teal)">
+    <p style="font-size:17px;margin:0 0 8px"><strong>OfeFit is a community fitness group in Cape Coast, Ghana.</strong></p>
+    <p style="margin:0">We move together: outdoors, at the university and in local venues. Fitness works better when it is shared, so every session is built to bring people together.</p>
+  </div>
+  <div class="grid" style="margin-top:14px">
+    <div class="card" style="border-top:5px solid var(--coral)"><h3>Move together</h3><p>Weekly classes from Monday to Saturday, plus a monthly sunrise walk and our signature events.</p></div>
+    <div class="card" style="border-top:5px solid var(--leaf)"><h3>Eat well</h3><p>Members get a simple weekly meal plan built around protein, vegetables and local favourites.</p></div>
+    <div class="card" style="border-top:5px solid var(--plum)"><h3>Stay connected</h3><p>Our WhatsApp tribe shares the schedule, routes and event details as they are confirmed.</p></div>
+  </div>
+  <div class="card tribe" style="margin-top:14px">
+    <h3>Ready to join?</h3>
+    <p class="muted">Choose a membership and pay by MoMo. Your membership starts once your payment is confirmed.</p>
+    <button class="btn" data-go="join">Join OfeFit</button>
   </div>
 </section>
 </main>
