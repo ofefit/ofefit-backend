@@ -341,9 +341,9 @@ async function refreshAll(){
 
     $("member-rows").innerHTML = members.map(m => {
       const active = m.status === "active" && m.expires_at && new Date(m.expires_at) > now;
-      const st = active ? "active" : (m.status === "active" ? "expired" : "pending");
+      const st = active ? "active" : (m.status === "active" ? "expired" : (m.status === "cancelled" ? "cancelled" : "pending"));
       return `<tr><td>${esc(m.full_name)}</td><td class="mono">${esc(m.code)}</td><td>${esc(TIER_NAMES[m.tier]||m.tier)}</td>
-        <td><span class="pill ${st}">${st}</span></td><td>${m.expires_at ? new Date(m.expires_at).toLocaleDateString() : "–"}</td><td>${esc(m.phone)}</td><td><button class="btn sec small" data-copy="${esc(m.code)}">${m.status === "active" ? "Copy message" : "Copy payment reminder"}</button></td></tr>`;
+        <td><span class="pill ${st === "cancelled" ? "expired" : st}">${st}</span></td><td>${m.expires_at ? new Date(m.expires_at).toLocaleDateString() : "–"}</td><td>${esc(m.phone)}</td><td><button class="btn sec small" data-copy="${esc(m.code)}">${m.status === "active" ? "Copy message" : "Copy payment reminder"}</button></td></tr>`;
     }).join("") || `<tr><td colspan="7" class="muted">No members yet.</td></tr>`;
     applyMemberSearch();
     document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => copyMessage(b.dataset.copy, b)));
