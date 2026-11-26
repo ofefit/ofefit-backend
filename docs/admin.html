@@ -134,6 +134,37 @@ th{background:#f3eefc}
     <table><thead><tr><th>Member</th><th>Tier</th><th>Amount</th><th>MoMo ID</th><th></th></tr></thead><tbody id="pay-rows"></tbody></table>
   </div>
 
+  <div class="block card" data-admin-only>
+    <h3>Partner venues and free memberships</h3>
+    <p class="muted">Employees of partner venues get free memberships. Each venue's agreement sets when its members' access ends. Renew the agreement and all its members renew with it.</p>
+    <table><thead><tr><th>Venue</th><th>Agreement ends</th><th>Members</th><th></th></tr></thead><tbody id="partner-rows"></tbody></table>
+
+    <h3 style="margin-top:18px">Add a partner venue</h3>
+    <div class="row">
+      <div><label>Venue name</label><input id="pv-name" placeholder="e.g. Bakado Gardens"></div>
+      <div><label>Agreement ends</label><input type="date" id="pv-ends"></div>
+    </div>
+    <label>Maximum members</label>
+    <input type="number" id="pv-max" value="30" min="1" style="max-width:160px">
+    <p><button class="btn" id="pv-add">Add venue</button></p>
+    <div class="msg" id="pv-msg"></div>
+
+    <h3 style="margin-top:18px">Issue member codes</h3>
+    <label>Venue</label>
+    <select id="pm-partner"></select>
+    <label>One person per line: full name, phone number</label>
+    <textarea id="pm-list" rows="5" placeholder="Ama Mensah, 024 123 4567" style="width:100%;padding:10px;border:1px solid #cfd5dd;border-radius:8px;font-size:15px;margin:4px 0 10px;font-family:inherit"></textarea>
+    <p><button class="btn" id="pm-add">Issue codes</button></p>
+    <div class="msg" id="pm-msg"></div>
+    <div id="pm-result"></div>
+
+    <h3 style="margin-top:18px">Remove a partner member</h3>
+    <div style="display:flex;gap:8px">
+      <input id="pm-remove-code" placeholder="FIE-XXXXXX" style="text-transform:uppercase">
+      <button class="btn sec" id="pm-remove">Remove</button>
+    </div>
+  </div>
+
   <div class="block card">
     <h3>Members</h3>
     <input id="member-search" placeholder="Search by name, code or phone" style="max-width:360px">
@@ -147,7 +178,7 @@ th{background:#f3eefc}
 const CFG = window.OFEFIT_CONFIG;
 const sb = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_PUBLISHABLE_KEY);
 const $ = id => document.getElementById(id);
-const TIER_NAMES = {student:"Campus", weekend:"Community", core:"Core", family:"Family", flex:"Flex (retired)", founders:"Founders (retired)", annual:"Core Annual (retired)"};
+const TIER_NAMES = {partner:"Partner", student:"Campus", weekend:"Community", core:"Core", family:"Family", flex:"Flex (retired)", founders:"Founders (retired)", annual:"Core Annual (retired)"};
 const SESSIONS = [
   {key:"tue",  name:"Chale, Let's Burn"},
   {key:"thu",  name:"Hustle Thursday"},
@@ -208,6 +239,91 @@ $("signout-btn").addEventListener("click", async () => {
 });
 sb.auth.getSession().then(({ data }) => { if(data.session) enterAdmin(); else showView("login"); });
 
+// ---- Partner venues (free memberships) ----
+let partners = [];
+function addMonths(iso, n){
+  const [y, m, d] = iso.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1 + n, d));
+  return dt.toISOString().slice(0,10);
+}
+async function renderPartners(members){
+  const { data, error } = await sb.from("partners").select("*").order("created_at");
+  if(error) throw error;
+  partners = data || [];
+  const today = todayStr();
+  const countFor = id => members.filter(m => m.partner_id === id && m.status !== "cancelled").length;
+  $("partner-rows").innerHTML = partners.length ? partners.map(p => {
+    const ended = p.ends_on < today;
+    return `<tr><td>${esc(p.name)}</td>
+      <td>${esc(p.ends_on)}${ended ? ' <span class="pill expired">ended</span>' : ""}</td>
+      <td>${countFor(p.id)} / ${p.max_members}</td>
+      <td><button class="btn sec small" data-renew="${esc(p.id)}" data-ends="${esc(p.ends_on)}">Renew 6 months</button></td></tr>`;
+  }).join("") : `<tr><td colspan="4" class="muted">No partner venues yet.</td></tr>`;
+  $("pm-partner").innerHTML = partners.map(p => `<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+  document.querySelectorAll("[data-renew]").forEach(b => b.addEventListener("click", () => renewPartner(b.dataset.renew, b.dataset.ends)));
+}
+async function renewPartner(id, ends){
+  clearMsg("pv-msg");
+  const today = todayStr();
+  const base = ends < today ? today : ends;
+  const next = addMonths(base, 6);
+  if(!confirm("Extend this agreement to " + next + "? All of its members will renew to that date.")) return;
+  try{
+    const { error } = await sb.rpc("admin_renew_partner", { p_id: id, p_ends_on: next });
+    if(error) throw error;
+    msg("pv-msg", "Agreement extended to " + next + ".", true);
+    refreshAll();
+  }catch(err){ msg("pv-msg", friendly(err), false); }
+}
+$("pv-add").addEventListener("click", async () => {
+  clearMsg("pv-msg");
+  const name = $("pv-name").value.trim();
+  const ends = $("pv-ends").value;
+  const max = parseInt($("pv-max").value, 10) || 30;
+  if(!name || !ends){ msg("pv-msg", "Enter the venue name and the agreement end date.", false); return; }
+  try{
+    const { error } = await sb.rpc("admin_add_partner", { p_name: name, p_ends_on: ends, p_max: max });
+    if(error) throw error;
+    $("pv-name").value = "";
+    msg("pv-msg", name + " added.", true);
+    refreshAll();
+  }catch(err){ msg("pv-msg", friendly(err), false); }
+});
+$("pm-add").addEventListener("click", async () => {
+  clearMsg("pm-msg");
+  const partner = $("pm-partner").value;
+  const lines = $("pm-list").value.split("\n").map(l => l.trim()).filter(Boolean);
+  if(!partner || !lines.length){ msg("pm-msg", "Choose a venue and enter at least one name and phone number.", false); return; }
+  const out = [];
+  let failed = 0;
+  for(const line of lines){
+    const parts = line.split(",").map(x => x.trim());
+    if(parts.length < 2){ out.push("✗ " + line + "  (use: Name, phone)"); failed++; continue; }
+    const name = parts.slice(0, -1).join(", ");
+    const phone = parts[parts.length - 1];
+    const { data, error } = await sb.rpc("admin_add_partner_member", { p_partner: partner, p_name: name, p_phone: phone });
+    if(error){ out.push("✗ " + name + ": " + friendly(error)); failed++; }
+    else out.push("✓ " + name + ": " + data);
+  }
+  $("pm-result").innerHTML = `<div class="box"><strong>Results</strong><pre style="white-space:pre-wrap;margin:8px 0 0;font-family:inherit">${esc(out.join("\n"))}</pre></div>`;
+  if(!failed) $("pm-list").value = "";
+  msg("pm-msg", failed ? failed + " line(s) need attention. See the results below." : "All members added. Send each person their code.", failed === 0);
+  refreshAll();
+});
+$("pm-remove").addEventListener("click", async () => {
+  clearMsg("pm-msg");
+  const code = $("pm-remove-code").value.trim().toUpperCase();
+  if(!code){ msg("pm-msg", "Enter the member code to remove.", false); return; }
+  if(!confirm("Remove " + code + "? Their card will stop working.")) return;
+  try{
+    const { error } = await sb.rpc("admin_remove_partner_member", { p_code: code });
+    if(error) throw error;
+    $("pm-remove-code").value = "";
+    msg("pm-msg", code + " removed.", true);
+    refreshAll();
+  }catch(err){ msg("pm-msg", friendly(err), false); }
+});
+
 // ---- Data loading ----
 async function loadMembers(){
   const { data, error } = await sb.from("members").select("*").order("joined_at", { ascending: false });
@@ -233,6 +349,7 @@ async function refreshAll(){
     document.querySelectorAll("[data-copy]").forEach(b => b.addEventListener("click", () => copyMessage(b.dataset.copy, b)));
     window._members = members;
     renderSignups(members);
+    if(isAdmin) await renderPartners(members);
 
     if(isAdmin){
       await loadPayments();
