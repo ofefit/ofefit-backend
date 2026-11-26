@@ -145,8 +145,8 @@ label{font-size:14px;color:var(--mut)}
     <div class="grid sched">
       <div class="card"><img class="thumb" src="img/01_lets_burn.png" alt="Chale, Let's Burn"><h3 class="sname">Chale, Let's Burn</h3><p class="muted">Tuesday · 6:30pm</p><p class="loc">Location: The Children's Station</p><p>Evening aerobics.</p></div>
       <div class="card"><img class="thumb" src="img/02_hustle_thursday.png" alt="Hustle Thursday"><h3 class="sname">Hustle Thursday</h3><p class="muted">Thursday · 6:30pm</p><p class="loc">Location: The Children's Station</p><p>Evening aerobics.</p></div>
-      <div class="card"><img class="thumb" src="img/level_up.jpg" alt="Level Up"><h3 class="sname">Level Up</h3><p class="muted">Monday · 6:30pm</p><p class="loc">Location: Community Gardens</p><p>Aerobics and Toning</p></div>
-      <div class="card"><img class="thumb" src="img/midweek_reset.jpg" alt="Midweek Reset"><h3 class="sname">Midweek Reset</h3><p class="muted">Wednesday · 6:30pm</p><p class="loc">Location: Community Gardens</p><p>Aerobics and Stretching</p><p class="mats">BRING YOUR MATS</p></div>
+      <div class="card"><img class="thumb" src="img/level_up.jpg" alt="Level Up"><h3 class="sname">Level Up</h3><p class="muted">Monday · 6:30pm</p><p class="loc">Location: Bakado Gardens</p><p>Aerobics and Toning</p></div>
+      <div class="card"><img class="thumb" src="img/midweek_reset.jpg" alt="Midweek Reset"><h3 class="sname">Midweek Reset</h3><p class="muted">Wednesday · 6:30pm</p><p class="loc">Location: Bakado Gardens</p><p>Aerobics and Stretching</p><p class="mats">BRING YOUR MATS</p></div>
       <div class="card"><img class="thumb" src="img/varsity_flow.jpg" alt="Varsity Flow"><h3 class="sname">Varsity Flow</h3><p class="muted">Friday · 6:30pm</p><p class="loc">Location: UCC Campus</p><p class="muted">Gym location on campus: TBA</p><p>Aerobics and Toning</p></div>
       <div class="card"><img class="thumb" src="img/nkoso_saturdays.jpg" alt="Nkɔso Saturdays"><h3 class="sname">Nkɔso Saturdays</h3><p class="muted">Saturday · 8:00am</p><p class="loc">Location: UCC Campus</p><p class="muted">Gym location on campus: TBA</p><p>Aerobics and Stretching</p><p class="mats">BRING YOUR MATS</p></div>
       <div class="card"><img class="thumb" src="img/04_health_walk.png" alt="OfeFit MOVE · WALK · VIBE"><h3 class="sname">OfeFit MOVE · WALK · VIBE</h3><p class="muted">First Saturday of the month</p><p class="loc">Walk Together. Live Healthier.</p><p>Sunrise walk starting @ 5:30a.m. Finish with 30 minutes of Stretching.</p><p class="muted">Routes &amp; location will be announced 1 week before the walk.</p><p class="series">A Signature OfeFit Event Series.</p></div>
@@ -157,7 +157,7 @@ label{font-size:14px;color:var(--mut)}
   <div class="block">
     <h2>Locations</h2>
     <div class="grid">
-      <div class="card"><h3>Community Gardens</h3><p class="muted">Monday and Wednesday · 6:30pm</p><p>Across from Lush on the Coast, Bonn Street, Bakado, Cape Coast.</p></div>
+      <div class="card"><h3>Bakado Gardens</h3><p class="muted">Monday and Wednesday · 6:30pm</p><p>Across from Lush on the Coast, Bonn Street, Bakado, Cape Coast.</p></div>
       <div class="card"><h3>The Children's Station</h3><p class="muted">Tuesday and Thursday · 6:30pm</p><p>9 Abura Second Link (Taxi Station area), Abura, Cape Coast.</p></div>
       <div class="card"><h3>UCC Campus</h3><p class="muted">Friday · 6:30pm and Saturday · 8:00am</p><p>UCC Campus. Gym location on campus: TBA.</p></div>
     </div>
@@ -252,6 +252,7 @@ label{font-size:14px;color:var(--mut)}
     <div id="card" hidden>
       <h3 id="card-name"></h3>
       <div class="muted" id="card-tier"></div>
+      <div class="muted" id="card-venue" hidden></div>
       <div style="margin:8px 0"><span class="pill" id="card-status"></span> <span class="muted" id="card-expiry"></span></div>
       <div id="qr"></div>
       <p class="muted" style="text-align:center">Show this code at the gate. Staff scan it to check you in.</p>
@@ -459,7 +460,10 @@ async function showCard(){
     const active = m.status === "active" && m.expires_at && new Date(m.expires_at) > new Date();
     const status = active ? "active" : (m.status === "active" ? "expired" : "pending");
     $("card-name").textContent = m.full_name;
-    $("card-tier").textContent = (tierById(m.tier)?.name || m.tier) + " · " + code;
+    const isPartner = m.tier === "partner";
+    $("card-tier").textContent = (isPartner ? "Partner membership" : (tierById(m.tier)?.name || m.tier)) + " · " + code;
+    $("card-venue").textContent = m.partner_name || "";
+    $("card-venue").hidden = !m.partner_name;
     $("card-status").textContent = status;
     $("card-status").className = "pill " + status;
     $("card-expiry").textContent = m.expires_at ? "Valid until " + new Date(m.expires_at).toLocaleDateString() : "Awaiting payment confirmation";
